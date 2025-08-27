@@ -24,24 +24,14 @@ Focus on:
 - Actionable fixes
 - Prevention strategies"""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle debug mode"""
-        messages = self.build_messages(context)
-        
-        # Enhance for debugging
-        messages[-1]["content"] = f"""Debug this issue:
-{messages[-1]["content"]}
-
-Provide:
+    def _get_mode_enhancement(self) -> str:
+        """Add debug-specific prompting structure"""
+        return """Provide:
 1. Problem analysis
 2. Likely root cause
 3. Step-by-step solution
 4. How to prevent in future"""
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.2)
-        )
-        
-        return response
+    
+    def _get_default_temperature(self) -> float:
+        """Debug mode uses very low temperature for precise analysis"""
+        return 0.2

@@ -31,17 +31,10 @@ Provide:
 - Explanation of improvements
 - Migration strategy if needed"""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle refactor mode"""
-        messages = self.build_messages(context)
-        
-        # Add refactoring-specific prompting
-        messages[-1]["content"] += "\n\nSuggest specific refactoring improvements with code examples. Focus on maintainability, performance, and best practices."
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.4)
-        )
-        
-        return response
+    def _get_mode_enhancement(self) -> str:
+        """Add refactoring-specific prompting"""
+        return "Suggest specific refactoring improvements with code examples. Focus on maintainability, performance, and best practices."
+    
+    def _get_default_temperature(self) -> float:
+        """Refactor mode uses moderate temperature for creative improvements"""
+        return 0.4

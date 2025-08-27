@@ -15,11 +15,9 @@ class OpenAIProvider(BaseProvider):
     """OpenAI AI provider"""
     
     MODELS = [
-        "gpt-4o",
-        "gpt-4o-mini",
-        "o1",
-        "o1-mini",
-        "o3-mini"
+        # Primary Models - 2025
+        "o3",
+        "gpt-5"
     ]
     
     def __init__(self, api_key: str = None):
@@ -80,16 +78,14 @@ class OpenAIProvider(BaseProvider):
         """Check if OpenAI API key is valid"""
         if not self.api_key or not self.client:
             return False
-        try:
-            # Simple test request
-            import asyncio
-            async def test():
-                response = await self.client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": "test"}],
-                    max_tokens=1
-                )
-                return True
-            return asyncio.run(test())
-        except Exception:
-            return False
+            
+        async def test():
+            # Use o3 for validation test
+            await self.client.chat.completions.create(
+                model="o3",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1
+            )
+            return True
+            
+        return self._run_async_validation_test(test)

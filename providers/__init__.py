@@ -12,6 +12,7 @@ from providers.openai import OpenAIProvider
 from providers.anthropic import AnthropicProvider
 from providers.openrouter import OpenRouterProvider
 from providers.custom import CustomProvider
+from models import manager as model_manager
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +90,12 @@ def get_provider(model: str) -> Optional[BaseProvider]:
     if not PROVIDERS:
         initialize_providers()
     
-    # Model to provider mapping
+    # Use ModelManager to determine provider
+    provider_name = model_manager.get_provider_for_model(model)
+    if provider_name:
+        return PROVIDERS.get(provider_name)
+    
+    # Fallback to old logic for models not in config
     if model.startswith("gemini") or model.startswith("models/gemini"):
         return PROVIDERS.get("gemini")
     elif model.startswith("gpt") or model.startswith("o1") or model.startswith("o3"):
@@ -115,15 +121,39 @@ def list_available_models() -> dict:
         
     models = {
         "available_models": [],
-        "providers": {}
+        "providers": {},
+        "models_by_provider": {}
     }
     
+    # Get models from ModelManager config
+    for model_name in model_manager.get_all_models():
+        provider_name = model_manager.get_provider_for_model(model_name)
+        if provider_name in PROVIDERS:
+            models["available_models"].append(model_name)
+            if provider_name not in models["models_by_provider"]:
+                models["models_by_provider"][provider_name] = []
+            models["models_by_provider"][provider_name].append(model_name)
+    
+    # Also keep legacy provider model lists for compatibility
     for name, provider in PROVIDERS.items():
         provider_models = provider.list_models()
         models["providers"][name] = provider_models
-        models["available_models"].extend(provider_models)
     
     return models
+
+def get_available_providers() -> list:
+    """Get all available providers and their status"""
+    # Return all supported providers, not just initialized ones
+    all_providers = ['openai', 'gemini', 'anthropic', 'openrouter', 'custom']
+    
+    # Initialize providers to check actual availability
+    if not PROVIDERS:
+        initialize_providers()
+    
+    return [{"name": name, 
+             "available": name in PROVIDERS, 
+             "models_count": len(PROVIDERS[name].list_models()) if name in PROVIDERS else 0} 
+            for name in all_providers]
 
 # Auto-initialize on import
 try:

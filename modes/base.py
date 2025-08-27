@@ -15,10 +15,9 @@ class BaseMode(ABC):
         """Get mode-specific system prompt"""
         pass
     
-    @abstractmethod
     async def handle(self, context: Dict[str, Any], provider: BaseProvider) -> str:
         """
-        Handle the mode execution
+        Handle the mode execution with common workflow
         
         Args:
             context: Full context including prompt, files, conversation
@@ -27,7 +26,28 @@ class BaseMode(ABC):
         Returns:
             Response string
         """
-        pass
+        messages = self.build_messages(context)
+        
+        # Apply mode-specific prompt enhancement
+        mode_enhancement = self._get_mode_enhancement()
+        if mode_enhancement:
+            messages[-1]["content"] += f"\n\n{mode_enhancement}"
+        
+        response = await provider.complete(
+            model=context["model"],
+            messages=messages,
+            temperature=context.get("temperature", self._get_default_temperature())
+        )
+        
+        return response
+    
+    def _get_mode_enhancement(self) -> str:
+        """Get mode-specific prompt enhancement (override in subclasses)"""
+        return ""
+    
+    def _get_default_temperature(self) -> float:
+        """Get mode-specific default temperature (override in subclasses)"""
+        return 0.7
     
     def build_messages(self, context: Dict[str, Any]) -> list[dict]:
         """Build messages for AI provider"""

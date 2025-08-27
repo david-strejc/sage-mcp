@@ -24,17 +24,10 @@ Provide structured analysis with:
 4. Specific recommendations
 5. Priority actions"""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle analyze mode"""
-        messages = self.build_messages(context)
-        
-        # Add analysis-specific prompting
-        messages[-1]["content"] += "\n\nProvide a comprehensive analysis with actionable insights."
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.3)
-        )
-        
-        return response
+    def _get_mode_enhancement(self) -> str:
+        """Add analysis-specific prompting"""
+        return "Provide a comprehensive analysis with actionable insights."
+    
+    def _get_default_temperature(self) -> float:
+        """Analysis mode uses lower temperature for more focused responses"""
+        return 0.3

@@ -17,6 +17,7 @@ from utils.files import read_files, expand_paths
 from utils.memory import get_thread, add_turn, create_thread
 from utils.models import select_best_model, ModelRestrictionService
 from utils.security import validate_paths
+from models import manager as model_manager
 
 logger = logging.getLogger(__name__)
 
@@ -129,23 +130,40 @@ class SageTool:
             "required": ["prompt"]
         }
         
-        # Add model field with restrictions applied
+        # Add model field with restrictions applied and hints
         if available_models:
+            # Get model hints from ModelManager
+            model_hints = model_manager.get_tool_description_hints()
+            
             if is_auto_mode:
-                # In auto mode, model is required and shows all available options
+                # In auto mode, model is required and shows all available options with hints
+                description = f"""REQUIRED: Select the AI model for this task.
+
+{model_hints}
+
+Auto-selection considers: task complexity, context size, mode preference.
+Available models: {', '.join(available_models)}"""
+                
                 schema["properties"]["model"] = {
                     "type": "string",
                     "enum": available_models,
-                    "description": "REQUIRED: Select the AI model for this task. Model restrictions are applied based on environment configuration."
+                    "description": description
                 }
                 schema["required"].append("model")
             else:
-                # Normal mode, model is optional with available options
+                # Normal mode, model is optional with available options and hints
+                description = f"""AI model to use (optional - auto-selects if not specified).
+
+{model_hints}
+
+Defaults to auto-selection based on task complexity and context size.
+Available models: {', '.join(available_models)}"""
+                
                 schema["properties"]["model"] = {
                     "type": "string",
-                    "enum": available_models + [self.config.DEFAULT_MODEL],
-                    "default": self.config.DEFAULT_MODEL,
-                    "description": f"AI model to use. Available models (after restrictions): {', '.join(available_models)}. Defaults to '{self.config.DEFAULT_MODEL}'."
+                    "enum": available_models + ["auto"],
+                    "default": "auto",
+                    "description": description
                 }
         else:
             # No models available due to restrictions or missing API keys
@@ -177,93 +195,42 @@ class SageTool:
         """
         Execute SAGE tool with comprehensive feature support
         
-        Features:
-        - Conversation continuation with thread management
-        - Smart file deduplication across conversation turns
-        - Model restriction enforcement
-        - Multiple file handling modes (embedded/summary/reference)
-        - Automatic directory expansion
-        - Token limit management
+        This is the main orchestrator method that coordinates all SAGE operations.
+        It delegates specific tasks to focused private methods for better testability.
         """
         try:
-            # Validate request using Pydantic model
-            request = SageRequest(**arguments)
-            logger.info(f"SAGE {request.mode} mode called")
+            # Convert folder to files if present
+            if 'folder' in arguments and arguments['folder']:
+                arguments['files'] = [arguments['folder']]
+                del arguments['folder']
             
-            # Check model restrictions
-            if request.model and not self._is_model_allowed(request.model):
-                available = self._get_available_models()
-                return [TextContent(type="text", text=json.dumps({
-                    "error": f"Model '{request.model}' is not allowed. Available models: {', '.join(available)}"
-                }))]
+            # 1. Validate request and check restrictions
+            request = self._validate_request(arguments)
             
-            # Validate file paths for security
-            if request.files:
-                valid, error = validate_paths(request.files)
-                if not valid:
-                    return [TextContent(type="text", text=json.dumps({
-                        "error": f"Invalid file paths: {error}"
-                    }))]
+            # 2. Prepare conversation context and get embedded files
+            conversation_context, embedded_files = self._prepare_conversation_context(request.continuation_id)
             
-            # Handle conversation continuation
-            conversation_context = None
-            embedded_files = []
-            if request.continuation_id:
-                conversation_context = get_thread(request.continuation_id)
-                if conversation_context:
-                    # Get files already embedded in conversation
-                    embedded_files = self._get_conversation_files(conversation_context)
-                    logger.info(f"Continuing conversation {request.continuation_id} with {len(embedded_files)} embedded files")
-                else:
-                    logger.warning(f"Continuation ID {request.continuation_id} not found")
+            # 3. Process files with smart deduplication
+            file_contents, new_files = self._process_files(
+                request.files, 
+                embedded_files, 
+                request.file_handling_mode,
+                request.model or self.config.DEFAULT_MODEL
+            )
             
-            # Smart file handling with deduplication
-            file_contents = {}
-            new_files = []
-            if request.files:
-                # Expand directories to individual files
-                expanded_files = expand_paths(request.files)
-                
-                # Filter out files already in conversation history
-                if embedded_files:
-                    new_files = [f for f in expanded_files if f not in embedded_files]
-                    logger.info(f"File deduplication: {len(expanded_files)} total, {len(new_files)} new, {len(embedded_files)} already embedded")
-                else:
-                    new_files = expanded_files
-                
-                # Read only new files
-                if new_files:
-                    file_contents = read_files(
-                        new_files,
-                        mode=request.file_handling_mode,
-                        max_tokens=self._get_token_budget(request.model or self.config.DEFAULT_MODEL)
-                    )
+            # 4. Select model and get provider
+            model_name, provider = self._select_model_and_provider(
+                request, 
+                conversation_context, 
+                new_files
+            )
             
-            # Auto-select model if needed
-            model_name = request.model or self.config.DEFAULT_MODEL
-            if model_name == "auto":
-                model_name = select_best_model(
-                    mode=request.mode,
-                    prompt_size=len(request.prompt),
-                    file_count=len(new_files),
-                    conversation_context=conversation_context
-                )
-                logger.info(f"Auto-selected model: {model_name}")
-            
-            # Get provider and mode handler
-            provider = get_provider(model_name)
-            if not provider:
-                return [TextContent(type="text", text=json.dumps({
-                    "error": f"No provider available for model: {model_name}"
-                }))]
-                
+            # 5. Get mode handler
             handler = get_mode_handler(request.mode)
             if not handler:
-                return [TextContent(type="text", text=json.dumps({
-                    "error": f"Unknown mode: {request.mode}"
-                }))]
+                raise ValueError(f"Unknown mode: {request.mode}")
             
-            # Build comprehensive context
+            # 6. Build context and execute
             full_context = {
                 "prompt": request.prompt,
                 "files": file_contents,
@@ -278,11 +245,10 @@ class SageTool:
                 "new_files": new_files
             }
             
-            # Execute mode handler
             logger.info(f"Executing {request.mode} mode with {model_name}")
             result = await handler.handle(full_context, provider)
             
-            # Handle conversation memory
+            # 7. Update conversation memory
             thread_id = request.continuation_id
             if not thread_id and len(result) > 100:  # Create new thread for substantial responses
                 thread_id = create_thread(
@@ -293,25 +259,11 @@ class SageTool:
                 logger.info(f"Created new conversation thread: {thread_id}")
             
             if thread_id:
-                # Add turn to conversation memory
-                add_turn(
-                    thread_id,
-                    "user",
-                    request.prompt,
-                    files=new_files,  # Track only newly embedded files
-                    tool_name="sage",
-                    mode=request.mode
-                )
-                add_turn(
-                    thread_id,
-                    "assistant", 
-                    result,
-                    model_name=model_name
-                )
+                self._update_conversation_memory(thread_id, request, result, model_name)
                 
-                # Add continuation offer to response
+                # 8. Format response with continuation offer
                 if not request.continuation_id:  # Only for new conversations
-                    result += f"\n\n---\n💬 **Continue this conversation**: Use `continuation_id: {thread_id}` with any SAGE mode to continue this discussion with full context."
+                    result = self._format_response(result, thread_id)
             
             return [TextContent(type="text", text=result)]
             
@@ -337,3 +289,118 @@ class SageTool:
         """Get token budget for file reading based on model capabilities"""
         max_tokens = self.config.MAX_TOKENS.get(model_name, self.config.MAX_TOKENS["default"])
         return int(max_tokens * 0.7)  # Reserve 30% for response generation
+    
+    def _validate_request(self, arguments: dict) -> SageRequest:
+        """Validate and parse request arguments"""
+        request = SageRequest(**arguments)
+        logger.info(f"SAGE {request.mode} mode called")
+        
+        # Check model restrictions
+        if request.model and not self._is_model_allowed(request.model):
+            available = self._get_available_models()
+            raise ValueError(f"Model '{request.model}' is not allowed. Available models: {', '.join(available)}")
+        
+        # Validate file paths for security
+        if request.files:
+            valid, error = validate_paths(request.files)
+            if not valid:
+                raise ValueError(f"Invalid file paths: {error}")
+        
+        return request
+    
+    def _prepare_conversation_context(self, continuation_id: Optional[str]) -> tuple[Optional[dict], list[str]]:
+        """Load conversation context and extract embedded files"""
+        conversation_context = None
+        embedded_files = []
+        
+        if continuation_id:
+            conversation_context = get_thread(continuation_id)
+            if conversation_context:
+                embedded_files = self._get_conversation_files(conversation_context)
+                logger.info(f"Continuing conversation {continuation_id} with {len(embedded_files)} embedded files")
+            else:
+                logger.warning(f"Continuation ID {continuation_id} not found")
+        
+        return conversation_context, embedded_files
+    
+    def _process_files(self, files: Optional[list[str]], embedded_files: list[str], 
+                      file_handling_mode: str, model: str) -> tuple[dict[str, Any], list[str]]:
+        """Process files with deduplication and content reading"""
+        file_contents = {}
+        new_files = []
+        
+        if files:
+            # Expand directories to individual files
+            expanded_files = expand_paths(files)
+            
+            # Filter out files already in conversation history
+            if embedded_files:
+                new_files = [f for f in expanded_files if f not in embedded_files]
+                logger.info(f"File deduplication: {len(expanded_files)} total, {len(new_files)} new, {len(embedded_files)} already embedded")
+            else:
+                new_files = expanded_files
+            
+            # Read only new files
+            if new_files:
+                file_contents = read_files(
+                    new_files,
+                    mode=file_handling_mode,
+                    max_tokens=self._get_token_budget(model)
+                )
+        
+        return file_contents, new_files
+    
+    def _select_model_and_provider(self, request: SageRequest, conversation_context: Optional[dict], 
+                                  new_files: list[str]) -> tuple[str, Any]:
+        """Select model and get provider instance"""
+        model_name = request.model or self.config.DEFAULT_MODEL
+        
+        if model_name == "auto" or model_name == "":
+            # Use ModelManager for intelligent selection
+            allowed_models = self._get_available_models()
+            model_name, reasoning = model_manager.select_model_for_task(
+                mode=request.mode,
+                prompt_size=len(request.prompt),
+                file_count=len(new_files),
+                conversation_context=conversation_context,
+                allowed_models=allowed_models
+            )
+            logger.info(f"Auto-selected model: {model_name} - {reasoning}")
+        
+        provider = get_provider(model_name)
+        if not provider:
+            available = self._get_available_models()
+            raise ValueError(f"No provider available for model '{model_name}'. Available models: {', '.join(available)}")
+        
+        return model_name, provider
+    
+    def _update_conversation_memory(self, thread_id: str, request: SageRequest, 
+                                   result: str, model_name: str) -> None:
+        """Update conversation memory with request and response"""
+        # Add user request
+        add_turn(
+            thread_id,
+            role="user",
+            content=request.prompt,
+            files=request.files or [],
+            tool_name="sage",
+            model_name=model_name,
+            mode=request.mode
+        )
+        
+        # Add assistant response
+        add_turn(
+            thread_id,
+            role="assistant", 
+            content=result,
+            tool_name="sage",
+            model_name=model_name,
+            mode=request.mode
+        )
+    
+    def _format_response(self, result: str, thread_id: str) -> str:
+        """Format final response with continuation offer"""
+        return f"""{result}
+
+---
+💬 **Continue this conversation**: Use `continuation_id: "{thread_id}"` in your next SAGE call to maintain context and avoid re-reading files."""

@@ -28,17 +28,10 @@ Create plans with:
 
 Be practical and realistic in your planning."""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle plan mode"""
-        messages = self.build_messages(context)
-        
-        # Add planning-specific prompting
-        messages[-1]["content"] += "\n\nCreate a detailed, actionable project plan with phases, tasks, and priorities."
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.5)
-        )
-        
-        return response
+    def _get_mode_enhancement(self) -> str:
+        """Add planning-specific prompting"""
+        return "Create a detailed, actionable project plan with phases, tasks, and priorities."
+    
+    def _get_default_temperature(self) -> float:
+        """Planning mode uses moderate temperature for structured creativity"""
+        return 0.5

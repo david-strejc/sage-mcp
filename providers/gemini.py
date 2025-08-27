@@ -15,8 +15,17 @@ class GeminiProvider(BaseProvider):
     """Google Gemini AI provider"""
     
     MODELS = [
+        # Gemini 2.5 Generation (Latest - 2025)
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-preview",
+        
+        # Gemini 2.0 Generation
+        "gemini-2.0-flash",
         "gemini-2.0-flash-exp",
         "gemini-2.0-flash-thinking-exp",
+        
+        # Gemini 1.5 Generation (Legacy)
         "gemini-1.5-pro",
         "gemini-1.5-flash",
         "gemini-1.5-flash-8b"

@@ -28,17 +28,10 @@ Generate tests that cover:
 Provide tests in the appropriate framework for the language/technology stack.
 Include clear test descriptions and assertions."""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle test mode"""
-        messages = self.build_messages(context)
-        
-        # Add test-specific prompting
-        messages[-1]["content"] += "\n\nGenerate comprehensive tests including unit tests, integration tests, and edge cases. Use appropriate testing frameworks."
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.4)
-        )
-        
-        return response
+    def _get_mode_enhancement(self) -> str:
+        """Add test-specific prompting"""
+        return "Generate comprehensive tests including unit tests, integration tests, and edge cases. Use appropriate testing frameworks."
+    
+    def _get_default_temperature(self) -> float:
+        """Test mode uses moderate temperature for creative test scenarios"""
+        return 0.4

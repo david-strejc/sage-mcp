@@ -29,17 +29,10 @@ Deep thinking involves:
 Take your time to think deeply and provide thoughtful, well-reasoned responses.
 Show your reasoning process and explain your conclusions clearly."""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle think mode"""
-        messages = self.build_messages(context)
-        
-        # Add thinking-specific prompting
-        messages[-1]["content"] += "\n\nThink deeply about this problem. Show your reasoning process and explore different approaches and implications."
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.8)
-        )
-        
-        return response
+    def _get_mode_enhancement(self) -> str:
+        """Add thinking-specific prompting"""
+        return "Think deeply about this problem. Show your reasoning process and explore different approaches and implications."
+    
+    def _get_default_temperature(self) -> float:
+        """Think mode uses high temperature for creative exploration"""
+        return 0.8

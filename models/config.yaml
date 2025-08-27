@@ -1,0 +1,263 @@
+# Model Configuration for SAGE MCP
+# This file defines all model capabilities, hints, and selection criteria
+
+models:
+  # OpenAI Models
+  o3:
+    provider: openai
+    display_name: "OpenAI o3"
+    emoji: "🧠"
+    capabilities:
+      reasoning: excellent
+      speed: slow
+      context_limit: 256000  # 256K tokens confirmed from benchmarks
+      cost: very_high
+      strengths:
+        - deep_reasoning
+        - mathematical_proofs
+        - complex_debugging
+        - algorithm_design
+    modes:
+      preferred: [think, debug, analyze]
+      suitable: [review, plan]
+    complexity:
+      min: high
+      optimal: very_high
+    description: "Deep reasoning model for complex problems requiring careful step-by-step analysis"
+    hint: "Use for: Mathematical proofs, algorithm design, complex debugging, deep analysis"
+    selection_priority: 1  # Higher priority for complex tasks
+
+  gpt-5:
+    provider: openai
+    display_name: "OpenAI GPT-5"
+    emoji: "🔧"
+    capabilities:
+      reasoning: very_good
+      speed: medium
+      context_limit: 400000  # 272K input + 128K output = 400K total
+      cost: high
+      strengths:
+        - planning
+        - code_generation
+        - tool_use
+        - refactoring
+    modes:
+      preferred: [plan, refactor, test]
+      suitable: [debug, review, analyze]
+    complexity:
+      min: medium
+      optimal: high
+    description: "Advanced model with excellent tool use and code generation capabilities"
+    hint: "Use for: Project planning, code generation, refactoring, test creation"
+    selection_priority: 2
+
+  # Google Gemini Models
+  gemini-2.5-pro:
+    provider: gemini
+    display_name: "Gemini 2.5 Pro"
+    emoji: "📚"
+    capabilities:
+      reasoning: very_good
+      speed: medium
+      context_limit: 1000000  # 1M tokens (2M coming soon)
+      cost: medium
+      strengths:
+        - long_context_analysis
+        - comprehensive_reviews
+        - deep_thinking
+        - multi_file_analysis
+    modes:
+      preferred: [analyze, review, think]
+      suitable: [debug, plan, refactor]
+    complexity:
+      min: medium
+      optimal: high
+    description: "Powerful model with massive 2M token context window for comprehensive analysis"
+    hint: "Use for: Large codebases, documentation review, multi-file analysis, long conversations"
+    selection_priority: 3
+
+  gemini-2.5-flash:
+    provider: gemini
+    display_name: "Gemini 2.5 Flash"
+    emoji: "⚡"
+    capabilities:
+      reasoning: good
+      speed: fast
+      context_limit: 1000000  # 1M tokens
+      cost: low
+      strengths:
+        - balanced_performance
+        - general_tasks
+        - quick_analysis
+        - debugging
+    modes:
+      preferred: [chat, debug, refactor]
+      suitable: [analyze, review, test]
+    complexity:
+      min: low
+      optimal: medium
+    description: "Fast model with good reasoning and 1M context, excellent price/performance ratio"
+    hint: "Use for: General development tasks, quick analysis, standard debugging"
+    selection_priority: 4
+
+  gemini-2.0-flash:
+    provider: gemini
+    display_name: "Gemini 2.0 Flash"
+    emoji: "🚀"
+    capabilities:
+      reasoning: good
+      speed: fast
+      context_limit: 1000000
+      cost: low
+      strengths:
+        - native_tool_use
+        - fast_responses
+        - efficient_processing
+    modes:
+      preferred: [chat, debug]
+      suitable: [refactor, test]
+    complexity:
+      min: low
+      optimal: medium
+    description: "Previous generation fast model with native tool use"
+    hint: "Use for: Quick responses, tool integration, efficient processing"
+    selection_priority: 5
+
+  gemini-1.5-pro:
+    provider: gemini
+    display_name: "Gemini 1.5 Pro" 
+    emoji: "📖"
+    capabilities:
+      reasoning: good
+      speed: medium
+      context_limit: 2000000  # Also 2M but older
+      cost: medium
+      strengths:
+        - stable_performance
+        - long_context
+    modes:
+      preferred: [analyze, review]
+      suitable: [chat, debug, plan]
+    complexity:
+      min: low
+      optimal: medium
+    description: "Legacy long-context model, stable and reliable"
+    hint: "Use for: Fallback when newer models unavailable, stable long context needs"
+    selection_priority: 6
+
+  gemini-1.5-flash:
+    provider: gemini
+    display_name: "Gemini 1.5 Flash"
+    emoji: "🏃"
+    capabilities:
+      reasoning: basic
+      speed: very_fast
+      context_limit: 1000000
+      cost: very_low
+      strengths:
+        - simple_queries
+        - quick_responses
+        - cost_efficiency
+    modes:
+      preferred: [chat]
+      suitable: [debug, refactor]
+    complexity:
+      min: minimal
+      optimal: low
+    description: "Fastest and cheapest model for simple tasks"
+    hint: "Use for: Simple questions, quick lookups, basic chat, cost-sensitive tasks"
+    selection_priority: 10
+
+  # Anthropic Models (via OpenRouter)
+  claude-opus-4.1:
+    provider: anthropic
+    display_name: "Claude Opus 4.1"
+    emoji: "🎯"
+    capabilities:
+      reasoning: excellent
+      speed: slow
+      context_limit: 200000
+      cost: very_high
+      strengths:
+        - coding
+        - deep_analysis
+        - complex_reasoning
+    modes:
+      preferred: [analyze, debug, think]
+      suitable: [review, plan, refactor]
+    complexity:
+      min: high
+      optimal: very_high
+    description: "Claude's most capable model, excellent at coding (SWE-bench leader)"
+    hint: "Use for: Complex coding tasks, deep analysis, careful reasoning"
+    selection_priority: 2
+
+  claude-sonnet-4:
+    provider: anthropic
+    display_name: "Claude Sonnet 4"
+    emoji: "💫"
+    capabilities:
+      reasoning: very_good
+      speed: medium
+      context_limit: 200000
+      cost: medium
+      strengths:
+        - balanced_capability
+        - efficient_reasoning
+    modes:
+      preferred: [analyze, review, debug]
+      suitable: [chat, plan, refactor]
+    complexity:
+      min: medium
+      optimal: high
+    description: "Balanced Claude model with good performance"
+    hint: "Use for: General development, balanced performance needs"
+    selection_priority: 4
+
+# Model selection rules
+selection_rules:
+  context_thresholds:
+    small: 10000      # < 10K tokens
+    medium: 100000    # < 100K tokens  
+    large: 500000     # < 500K tokens
+    massive: 2000000  # < 2M tokens
+    
+  complexity_indicators:
+    high:
+      keywords: [algorithm, proof, optimize, architecture, design, complex]
+      file_count: 5
+      token_count: 50000
+    medium:
+      keywords: [debug, refactor, analyze, review, test]
+      file_count: 2
+      token_count: 10000
+    low:
+      keywords: [explain, what, how, simple, basic]
+      file_count: 1
+      token_count: 2000
+
+# Provider configurations
+providers:
+  openai:
+    requires_api_key: true
+    env_var: OPENAI_API_KEY
+    supports_streaming: true
+    supports_tools: true
+    
+  gemini:
+    requires_api_key: true
+    env_var: GEMINI_API_KEY
+    supports_streaming: true
+    supports_tools: true
+    
+  anthropic:
+    requires_api_key: true
+    env_var: ANTHROPIC_API_KEY
+    supports_streaming: true
+    supports_tools: false
+    
+  openrouter:
+    requires_api_key: true
+    env_var: OPENROUTER_API_KEY
+    supports_streaming: true
+    supports_tools: false

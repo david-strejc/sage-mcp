@@ -42,3 +42,19 @@ class BaseProvider(ABC):
     def validate_api_key(self) -> bool:
         """Check if API key is valid"""
         pass
+    
+    def _run_async_validation_test(self, test_function) -> bool:
+        """
+        Helper method to run async validation tests with common error handling
+        
+        Args:
+            test_function: Async function that performs the validation test
+            
+        Returns:
+            True if validation succeeds, False otherwise
+        """
+        try:
+            import asyncio
+            return asyncio.run(test_function())
+        except Exception:
+            return False

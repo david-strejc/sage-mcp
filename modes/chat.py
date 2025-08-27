@@ -19,14 +19,6 @@ Your role is to:
 
 Focus on being helpful while keeping responses focused and relevant."""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle chat mode"""
-        messages = self.build_messages(context)
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.7)
-        )
-        
-        return response
+    def _get_default_temperature(self) -> float:
+        """Chat mode uses default conversational temperature"""
+        return 0.7

@@ -15,8 +15,18 @@ class OpenRouterProvider(BaseProvider):
     """OpenRouter AI provider for unified model access"""
     
     MODELS = [
+        # Latest 2025 Models via OpenRouter
+        "anthropic/claude-opus-4.1",
+        "anthropic/claude-sonnet-4", 
+        "anthropic/claude-3.7-sonnet",
+        "openai/o3",
+        "openai/gpt-5",
+        "google/gemini-2.5-pro",
+        "google/gemini-2.5-flash",
+        
+        # Legacy Models
         "anthropic/claude-3.5-sonnet",
-        "anthropic/claude-3.5-haiku",
+        "anthropic/claude-3.5-haiku", 
         "openai/gpt-4o",
         "openai/gpt-4o-mini",
         "google/gemini-pro-1.5",
@@ -77,20 +87,17 @@ class OpenRouterProvider(BaseProvider):
         """Check if OpenRouter API key is valid"""
         if not self.api_key or not self.client:
             return False
-        try:
-            # Simple test request with a cheap model
-            import asyncio
-            async def test():
-                response = await self.client.chat.completions.create(
-                    model="mistralai/mistral-7b-instruct",
-                    messages=[{"role": "user", "content": "test"}],
-                    max_tokens=1,
-                    extra_headers={
-                        "HTTP-Referer": "https://sage-mcp.local",
-                        "X-Title": "SAGE MCP Server"
-                    }
-                )
-                return True
-            return asyncio.run(test())
-        except Exception:
-            return False
+            
+        async def test():
+            await self.client.chat.completions.create(
+                model="mistralai/mistral-7b-instruct",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1,
+                extra_headers={
+                    "HTTP-Referer": "https://sage-mcp.local",
+                    "X-Title": "SAGE MCP Server"
+                }
+            )
+            return True
+            
+        return self._run_async_validation_test(test)

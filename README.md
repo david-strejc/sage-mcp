@@ -1,110 +1,183 @@
-# 🧙‍♂️ SAGE-MCP: Simple AI Guidance Engine
+# 🧙 SAGE-MCP: Simple AI Guidance Engine for Claude
 
-**One tool to rule them all** - A complete rewrite of zen-mcp-server with 75% less code and revolutionary features.
+[![Version](https://img.shields.io/badge/version-0.1.0--beta-blue)](https://github.com/david-strejc/sage-mcp/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Claude](https://img.shields.io/badge/Claude-MCP_Server-purple)](https://claude.ai)
+[![Python](https://img.shields.io/badge/python-3.9%2B-brightgreen)](https://www.python.org)
+
+> **Universal AI assistant MCP server with intelligent mode selection, conversation continuity, and smart file handling**
+
+SAGE-MCP transforms Claude into a multi-talented development assistant that adapts to your needs. Whether you're debugging code, planning architecture, writing tests, or having a technical discussion, SAGE automatically selects the right approach and model for optimal results.
 
 ## ✨ Key Features
 
-- **🎯 Universal Tool**: One `sage` tool instead of 17 specialized tools
-- **🧠 Conversation Continuation**: Seamless multi-turn conversations across modes
-- **📁 Smart File Handling**: Automatic deduplication and multiple handling modes
-- **🔒 Model Restrictions**: Cost control and security through environment variables
-- **⚡ Mode-Based Specialization**: 8 specialized modes within unified interface
-- **🤖 Auto Model Selection**: Intelligent model selection based on task requirements
-- **💡 Dynamic Schemas**: Tool schema adapts to available models and restrictions
+### 🎯 **Intelligent Mode System**
+- **chat** - Natural conversations with context awareness
+- **analyze** - Deep code analysis and pattern recognition  
+- **review** - Comprehensive code reviews with actionable feedback
+- **debug** - Systematic debugging and root cause analysis
+- **plan** - Strategic project planning and architecture design
+- **test** - Test generation with coverage analysis
+- **refactor** - Code improvement and modernization
+- **think** - Deep reasoning with adjustable thinking depth
 
-## 🎨 Available Modes
+### 🔄 **Conversation Continuity**
+- Seamless multi-turn conversations across different modes
+- Automatic context preservation between tool calls
+- Smart file deduplication - never re-read the same files
+- Thread-based memory system for long-running tasks
 
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| `chat` | General discussion | Q&A, brainstorming, general help |
-| `analyze` | Code & architecture analysis | Review design patterns, performance |
-| `review` | Code review for quality/security | Bug hunting, security audit |
-| `debug` | Troubleshooting & root cause | Error investigation, problem solving |
-| `plan` | Project planning & breakdown | Task planning, project management |
-| `test` | Test generation | Unit tests, integration tests |
-| `refactor` | Code improvement suggestions | Code quality, optimization |
-| `think` | Deep reasoning | Complex problem solving |
+### 🤖 **Smart Model Selection**
+- **Auto mode** - Intelligent model selection based on task complexity
+- Support for multiple providers: OpenAI, Anthropic, Google, OpenRouter
+- Model restrictions via environment variables for cost control
+- Thinking depth control: minimal (0.5%), low (8%), medium (33%), high (67%), max (100%)
+
+### 📁 **Intelligent File Handling**
+- **embedded** - Full file content in context (default)
+- **summary** - Token-efficient summaries for large codebases
+- **reference** - File storage with ID references
+- Automatic directory expansion and smart deduplication
+- Security validation for all file operations
+
+### 🌐 **Web Search Integration**
+- Real-time documentation lookup
+- Best practices and current standards
+- Framework and library research
+- Error and issue investigation
+
+## 🎨 Mode Specializations
+
+| Mode | Temperature | Description | Best For |
+|------|------------|-------------|----------|
+| **chat** | 0.5 | Natural conversations with balanced creativity | Q&A, brainstorming, explanations |
+| **analyze** | 0.2 | Focused precision for code analysis | Architecture review, pattern detection |
+| **review** | 0.3 | Systematic evaluation with consistent standards | Security audits, best practices |
+| **debug** | 0.1 | Deterministic analysis for troubleshooting | Error investigation, root cause analysis |
+| **plan** | 0.4 | Strategic thinking for project planning | Architecture design, task breakdown |
+| **test** | 0.2 | Accurate test generation with edge cases | Unit tests, integration tests |
+| **refactor** | 0.3 | Careful improvements preserving functionality | Code modernization, optimization |
+| **think** | 0.7 | Creative problem solving with deep reasoning | Complex algorithms, system design |
 
 ## 🚀 Quick Start
 
-### 1. Installation
+### Installation
 
 ```bash
-# Clone and setup
-git clone <repo-url> sage-mcp
+# Clone the repository
+git clone https://github.com/david-strejc/sage-mcp
 cd sage-mcp
-./setup.sh
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure your API keys
+export OPENAI_API_KEY="your-key-here"
+export ANTHROPIC_API_KEY="your-key-here"
+export GOOGLE_API_KEY="your-key-here"
+export OPENROUTER_API_KEY="your-key-here"
 ```
 
-### 2. Configure API Keys
+### Claude Desktop Configuration
 
-```bash
-# Copy example and edit
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-### 3. Test Installation
-
-```bash
-# Test API connectivity
-./scripts/test_api_keys.py
-
-# Test CLI
-./cli.py chat "Hello, SAGE!"
-```
-
-### 4. Configure Claude Desktop
-
-Add to `claude_desktop_config.json`:
+Add to your Claude Desktop MCP settings:
 
 ```json
 {
   "mcpServers": {
     "sage": {
       "command": "python",
-      "args": ["/absolute/path/to/sage-mcp/server.py"],
+      "args": ["/path/to/sage-mcp/server.py"],
       "env": {
-        "PYTHONPATH": "/absolute/path/to/sage-mcp"
+        "OPENAI_API_KEY": "your-key",
+        "ANTHROPIC_API_KEY": "your-key",
+        "DEFAULT_MODEL": "gpt-4o",
+        "DEFAULT_PROVIDER": "openai"
       }
     }
   }
 }
 ```
 
-## 🎯 Usage Examples
+## 📖 Usage Examples
 
-### Basic Usage (Claude Desktop)
-
-```python
-# General chat
-sage(mode="chat", prompt="How do I implement JWT authentication?")
-
-# Code analysis
-sage(mode="analyze", prompt="Review this architecture", files=["/src/app.py"])
-
-# Debug with files
-sage(mode="debug", prompt="Why is this crashing?", files=["/logs/error.log"])
-
-# Continue conversation
-sage(mode="review", prompt="Now check for security issues", continuation_id="abc123")
+### Basic Chat
+```typescript
+// In Claude:
+Use sage tool to explain how async/await works in Python
 ```
 
-### CLI Usage
+### Code Analysis with Files
+```typescript
+// Analyze specific files
+Use sage tool in analyze mode to review the architecture of ./src/api/
+
+// With model selection
+Use sage with model gpt-4o to analyze performance bottlenecks in server.py
+```
+
+### Multi-turn Conversations
+```typescript
+// First turn
+Use sage to help me design a caching system
+
+// Continue the conversation (Claude will auto-continue)
+Now let's implement the LRU cache we discussed
+
+// Files are automatically deduplicated across turns
+```
+
+### Deep Thinking Mode
+```typescript
+// For complex problems requiring deep reasoning
+Use sage in think mode with thinking_mode="high" to solve this algorithmic challenge: [problem description]
+```
+
+### Smart File Handling
+```typescript
+// Token-efficient mode for large codebases
+Use sage with file_handling_mode="summary" to review the entire project structure
+
+// Reference mode for iterative work
+Use sage with file_handling_mode="reference" to start refactoring the database layer
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
 
 ```bash
-# Quick chat
-./cli.py chat "Explain async/await in Python"
+# Provider Configuration
+DEFAULT_PROVIDER=openai          # Default: auto
+DEFAULT_MODEL=gpt-4o            # Default: auto
+FALLBACK_MODEL=gpt-4o-mini      # Fallback for errors
 
-# Analyze with files
-./cli.py analyze "Review this code" /src/*.py
+# Model Restrictions (optional)
+ALLOWED_MODELS=gpt-4o,gpt-4o-mini,claude-3-5-sonnet
+DISALLOWED_MODELS=o1-preview,o1  # Expensive models to exclude
 
-# Continue conversation
-./cli.py chat "What about error handling?" --thread abc123
+# Feature Flags
+WEBSEARCH_ENABLED=true          # Enable web search
+FILE_SECURITY_CHECK=true        # Validate file paths
+AUTO_MODEL_SELECTION=true       # Smart model selection
 
-# Use specific model
-./cli.py think "Design a microservices architecture" --model gemini-1.5-pro
+# Token Limits
+MAX_TOKENS_GPT4O=128000
+MAX_TOKENS_CLAUDE=200000
+MAX_THINKING_TOKENS_O1=100000
 ```
+
+### Mode-Specific Temperatures
+
+Default temperatures optimized for each mode:
+- **chat**: 0.5 - Balanced creativity
+- **analyze**: 0.2 - Focused precision
+- **review**: 0.3 - Systematic evaluation
+- **debug**: 0.1 - Deterministic analysis
+- **plan**: 0.4 - Strategic thinking
+- **test**: 0.2 - Accurate test generation
+- **refactor**: 0.3 - Careful improvements
+- **think**: 0.7 - Creative problem solving
 
 ## 🔧 Advanced Features
 
@@ -156,9 +229,17 @@ DISABLED_MODEL_PATTERNS=expensive,legacy
 DEFAULT_MODEL=auto  # Forces explicit model choice
 ```
 
-## ⚙️ Configuration
+### Supported Models
 
-### Environment Variables
+| Provider | Models | Configuration |
+|----------|--------|---------------|
+| **OpenAI** | gpt-4o, gpt-4o-mini, o1, o3-mini | OPENAI_API_KEY |
+| **Anthropic** | claude-3-5-sonnet, claude-3-5-haiku | ANTHROPIC_API_KEY |
+| **Google** | gemini-2.0-flash-exp, gemini-1.5-pro | GOOGLE_API_KEY |
+| **OpenRouter** | 100+ models from all providers | OPENROUTER_API_KEY |
+| **Custom/Ollama** | llama3.2, mistral, codestral | CUSTOM_API_URL |
+
+### Legacy Configuration Table
 
 | Variable | Description | Example |
 |----------|-------------|---------|
@@ -171,175 +252,104 @@ DEFAULT_MODEL=auto  # Forces explicit model choice
 | `MAX_FILE_SIZE` | Maximum file size in bytes | `10000000` |
 | `MCP_PROMPT_SIZE_LIMIT` | MCP transport limit | `50000` |
 
-### Model Providers
 
-| Provider | Models | Configuration |
-|----------|--------|---------------|
-| **Google Gemini** | `gemini-2.0-flash-exp`, `gemini-1.5-pro`, `gemini-1.5-flash` | `GEMINI_API_KEY` |
-| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini` | `OPENAI_API_KEY` |
-| **Anthropic** | `claude-3.5-sonnet`, `claude-3.5-haiku` | `ANTHROPIC_API_KEY` |
-| **OpenRouter** | `anthropic/claude-3.5-sonnet`, `openai/gpt-4o`, etc. | `OPENROUTER_API_KEY` |
-| **Custom/Ollama** | `llama3.2`, `mistral:7b`, etc. | `CUSTOM_API_URL` |
-
-## 🔄 Migration from zen-mcp
-
-```bash
-# Automatic migration
-./scripts/migrate_from_zen.py
-
-# Manual steps
-1. Backup zen-mcp configuration
-2. Install sage-mcp 
-3. Copy .env settings
-4. Update Claude config
-5. Test functionality
-```
-
-### Compatibility
-
-- ✅ All zen-mcp features preserved
-- ✅ Enhanced with conversation continuation
-- ✅ Improved file handling
-- ✅ Better error handling
-- ✅ Model restrictions for cost control
-
-## 🧪 Development
-
-### Project Structure
+## 🏗️ Architecture
 
 ```
 sage-mcp/
-├── server.py              # MCP server entry point
-├── cli.py                 # CLI wrapper  
-├── config.py              # Central configuration
-├── tools/sage.py          # Universal SAGE tool
-├── modes/                 # Mode handlers
-├── providers/             # AI provider implementations
-├── utils/                 # Utility modules
-└── scripts/               # Helper scripts
+├── server.py           # FastMCP server entry point
+├── config.py           # Configuration management
+├── tools/
+│   └── sage.py        # Universal SAGE tool
+├── modes/             # Specialized AI modes
+│   ├── base.py        # Base mode handler
+│   ├── chat.py        # Conversational mode
+│   ├── analyze.py     # Code analysis mode
+│   ├── debug.py       # Debugging mode
+│   └── ...
+├── providers/         # AI provider integrations
+│   ├── openai.py
+│   ├── anthropic.py
+│   ├── gemini.py
+│   └── openrouter.py
+├── models/           # Model management
+│   ├── manager.py    # Intelligent model selection
+│   └── config.yaml   # Model capabilities
+└── utils/            # Utilities
+    ├── files.py      # File handling
+    ├── memory.py     # Conversation memory
+    ├── models.py     # Model restrictions
+    └── security.py   # Security validation
 ```
 
-### Adding New Modes
-
-```python
-# modes/custom.py
-from modes.base import BaseMode
-
-class CustomMode(BaseMode):
-    def get_system_prompt(self) -> str:
-        return "Your custom system prompt"
-    
-    async def handle(self, context: dict, provider) -> str:
-        messages = self.build_messages(context)
-        return await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.5)
-        )
-
-# Register in modes/__init__.py
-MODES["custom"] = CustomMode()
-```
-
-### Adding New Providers
-
-```python
-# providers/custom.py
-from providers.base import BaseProvider
-
-class CustomProvider(BaseProvider):
-    async def complete(self, model, messages, temperature=0.5, max_tokens=None):
-        # Implementation
-        pass
-    
-    def list_models(self):
-        return ["custom-model-1", "custom-model-2"]
-    
-    def validate_api_key(self):
-        # Validation logic
-        return True
-```
-
-## 📊 Comparison: zen-mcp vs SAGE
-
-| Feature | zen-mcp | SAGE-MCP | Improvement |
-|---------|---------|----------|-------------|
-| **Tools** | 17 specialized | 1 universal | 94% reduction |
-| **Code Size** | ~4,000 lines | ~1,200 lines | 70% reduction |
-| **Conversation Memory** | ❌ | ✅ | New feature |
-| **File Deduplication** | ❌ | ✅ | New feature |
-| **Model Restrictions** | Basic | Advanced | Enhanced |
-| **Auto Model Selection** | ❌ | ✅ | New feature |
-| **Dynamic Schemas** | ❌ | ✅ | New feature |
-| **Maintenance Complexity** | High | Low | Simplified |
-
-## 🔒 Security & Cost Control
+## 🧪 Advanced Features
 
 ### Model Restrictions
-- **Provider-level**: Control which providers are used
-- **Model-level**: Allow/block specific models  
-- **Pattern-based**: Block models matching patterns
-- **Cost control**: Prevent expensive model usage
+Control which models can be used to manage costs:
 
-### File Security
-- **Path validation**: Prevent directory traversal
-- **Extension filtering**: Only allow safe file types
-- **Size limits**: Prevent large file processing
-- **Permission checks**: Verify read access
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**No models available**
 ```bash
-# Check API keys
-./scripts/test_api_keys.py
+# Allow only specific models
+export ALLOWED_MODELS="gpt-4o-mini,claude-3-haiku"
 
-# Check restrictions
-echo $BLOCKED_MODELS
-echo $OPENAI_ALLOWED_MODELS
+# Exclude expensive models
+export DISALLOWED_MODELS="o1-preview,claude-3-opus"
 ```
 
-**Import errors**
-```bash
-# Check Python path
-export PYTHONPATH=$(pwd)
-python -c "from tools.sage import SageTool"
+### Conversation Memory
+SAGE maintains conversation context across tool calls:
+
+```python
+# Automatically continues conversations
+# Previous context and files are preserved
+# Smart deduplication prevents re-reading
 ```
 
-**MCP connection issues**
-```bash
-# Check Claude config path
-# macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
-# Linux: ~/.config/Claude/claude_desktop_config.json
+### Custom Providers
+Add custom AI providers by implementing the base provider interface:
+
+```python
+class CustomProvider(BaseProvider):
+    async def generate(self, messages, **kwargs):
+        # Your implementation
+        pass
 ```
-
-## 📈 Performance
-
-- **Startup time**: < 2 seconds
-- **Memory usage**: 30% less than zen-mcp
-- **Context handling**: Up to 1M+ tokens (model dependent)
-- **File processing**: Intelligent chunking and prioritization
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Development Setup
+
+```bash
+# Install dev dependencies
+pip install -r requirements-dev.txt
+
+# Run tests
+pytest
+
+# Format code
+black .
+ruff check .
+```
+
+
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
-- Built on the foundation of zen-mcp-server
-- Powered by the MCP (Model Context Protocol) framework
-- Inspired by the need for simplicity and maintainability
+- Built on [FastMCP](https://github.com/jlowin/fastmcp) framework
+- Inspired by [zen-mcp-server](https://github.com/punkpeye/zen-mcp-server)
+- Powered by Claude MCP protocol
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/david-strejc/sage-mcp)
+- [Issue Tracker](https://github.com/david-strejc/sage-mcp/issues)
+- [MCP Documentation](https://modelcontextprotocol.io)
 
 ---
 
-**SAGE: "Wisdom through simplicity, power through intelligence"** 🧙‍♂️✨
+**SAGE-MCP** - Your intelligent AI assistant that adapts to how you work 🧙✨

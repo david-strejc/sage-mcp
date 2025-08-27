@@ -37,6 +37,13 @@ def list_available_modes() -> list[str]:
     """List all available mode names"""
     return list(MODES.keys())
 
+def get_available_modes() -> list:
+    """Get all available modes with descriptions"""
+    from config import Config
+    config = Config()
+    return [{"name": mode, "description": config.MODE_DESCRIPTIONS.get(mode, "No description")} 
+            for mode in MODES.keys()]
+
 def get_mode_description(mode: str) -> Optional[str]:
     """Get description for a mode"""
     from config import Config
@@ -68,7 +75,8 @@ validate_modes()
 
 __all__ = [
     "get_mode_handler",
-    "list_available_modes", 
+    "list_available_modes",
+    "get_available_modes", 
     "get_mode_description",
     "get_all_mode_descriptions",
     "MODES"

@@ -65,17 +65,12 @@ class CustomProvider(BaseProvider):
     
     def validate_api_key(self) -> bool:
         """Check if custom endpoint is accessible"""
-        try:
-            # Simple test request
-            import asyncio
-            async def test():
-                response = await self.client.chat.completions.create(
-                    model="llama3.2",
-                    messages=[{"role": "user", "content": "test"}],
-                    max_tokens=1
-                )
-                return True
-            return asyncio.run(test())
-        except Exception as e:
-            logger.debug(f"Custom provider validation failed: {e}")
-            return False
+        async def test():
+            await self.client.chat.completions.create(
+                model="llama3.2",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1
+            )
+            return True
+            
+        return self._run_async_validation_test(test)

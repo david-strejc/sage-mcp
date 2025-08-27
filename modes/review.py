@@ -27,17 +27,10 @@ Provide structured review with:
 
 Be thorough but constructive. Explain the reasoning behind each finding."""
 
-    async def handle(self, context: dict, provider) -> str:
-        """Handle review mode"""
-        messages = self.build_messages(context)
-        
-        # Add review-specific prompting
-        messages[-1]["content"] += "\n\nProvide a thorough code review with specific, actionable feedback."
-        
-        response = await provider.complete(
-            model=context["model"],
-            messages=messages,
-            temperature=context.get("temperature", 0.3)
-        )
-        
-        return response
+    def _get_mode_enhancement(self) -> str:
+        """Add review-specific prompting"""
+        return "Provide a thorough code review with specific, actionable feedback."
+    
+    def _get_default_temperature(self) -> float:
+        """Review mode uses low temperature for consistent evaluation"""
+        return 0.3

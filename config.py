@@ -99,7 +99,7 @@ class Config:
         '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.c', '.cpp', '.h',
         '.cs', '.rb', '.go', '.rs', '.swift', '.kt', '.php', '.sql',
         '.html', '.css', '.scss', '.json', '.xml', '.yaml', '.yml',
-        '.md', '.txt', '.log', '.conf', '.ini', '.toml', '.env',
+        '.md', '.txt', '.log', '.conf', '.ini', '.toml', '.env', '.csv',
         '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
         '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'  # Image support
     }

@@ -15,10 +15,21 @@ class AnthropicProvider(BaseProvider):
     """Anthropic Claude AI provider"""
     
     MODELS = [
+        # Claude 4 Generation (Latest - 2025)
+        "claude-opus-4.1",
+        "claude-opus-4",
+        "claude-sonnet-4",
+        
+        # Claude 3.7 Generation  
+        "claude-3.7-sonnet",
+        
+        # Legacy Claude 3.5 (deprecated Oct 2025)
         "claude-3.5-sonnet-20241022",
         "claude-3.5-haiku-20241022",
+        
+        # Legacy Claude 3
         "claude-3-opus-20240229",
-        "claude-3-sonnet-20240229",
+        "claude-3-sonnet-20240229", 
         "claude-3-haiku-20240307"
     ]
     
@@ -74,16 +85,14 @@ class AnthropicProvider(BaseProvider):
         """Check if Anthropic API key is valid"""
         if not self.api_key or not self.client:
             return False
-        try:
-            # Simple test request
-            import asyncio
-            async def test():
-                response = await self.client.messages.create(
-                    model="claude-3-haiku-20240307",
-                    messages=[{"role": "user", "content": "test"}],
-                    max_tokens=1
-                )
-                return True
-            return asyncio.run(test())
-        except Exception:
-            return False
+            
+        async def test():
+            # Use latest Sonnet 4 for validation test
+            await self.client.messages.create(
+                model="claude-sonnet-4",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1
+            )
+            return True
+            
+        return self._run_async_validation_test(test)
