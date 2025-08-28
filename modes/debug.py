@@ -4,9 +4,10 @@ Debug mode - Troubleshooting and root cause analysis
 
 from modes.base import BaseMode
 
+
 class DebugMode(BaseMode):
     """Handle debugging and troubleshooting"""
-    
+
     def get_system_prompt(self) -> str:
         return """You are SAGE in debug mode - an expert debugger and troubleshooter.
         
@@ -31,7 +32,7 @@ Focus on:
 2. Likely root cause
 3. Step-by-step solution
 4. How to prevent in future"""
-    
+
     def _get_default_temperature(self) -> float:
         """Debug mode uses very low temperature for precise analysis"""
         return 0.2

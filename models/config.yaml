@@ -100,29 +100,6 @@ models:
     hint: "Use for: General development tasks, quick analysis, standard debugging"
     selection_priority: 4
 
-  gemini-2.0-flash:
-    provider: gemini
-    display_name: "Gemini 2.0 Flash"
-    emoji: "🚀"
-    capabilities:
-      reasoning: good
-      speed: fast
-      context_limit: 1000000
-      cost: low
-      strengths:
-        - native_tool_use
-        - fast_responses
-        - efficient_processing
-    modes:
-      preferred: [chat, debug]
-      suitable: [refactor, test]
-    complexity:
-      min: low
-      optimal: medium
-    description: "Previous generation fast model with native tool use"
-    hint: "Use for: Quick responses, tool integration, efficient processing"
-    selection_priority: 5
-
   gemini-1.5-pro:
     provider: gemini
     display_name: "Gemini 1.5 Pro" 

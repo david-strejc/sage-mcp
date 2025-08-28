@@ -11,18 +11,15 @@ from pathlib import Path
 from typing import Any
 
 # Create log directory in user's home
-log_dir = Path.home() / '.claude' / 'mcp_logs'
+log_dir = Path.home() / ".claude" / "mcp_logs"
 log_dir.mkdir(parents=True, exist_ok=True)
-log_file = log_dir / 'sage.log'
+log_file = log_dir / "sage.log"
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
@@ -33,15 +30,17 @@ except ImportError:
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
     from mcp.types import Tool, TextContent
+
     FastMCP = None
 
 from config import Config
 from tools.sage import SageTool
 from providers import list_available_models
 
+
 class SageServer:
     """MCP Server for SAGE tool using FastMCP"""
-    
+
     def __init__(self):
         if FastMCP:
             self.mcp = FastMCP("sage-mcp")
@@ -52,77 +51,80 @@ class SageServer:
             self.server = Server("sage-mcp")
             self.sage_tool = SageTool()
             self._setup_handlers()
-    
+
     def _setup_fastmcp_tools(self):
         """Register tools using FastMCP"""
-        
+
         @self.mcp.tool(
             name="sage",
-            description="Universal AI assistant for development tasks"
+            description="SAGE: Multi-provider AI assistant. Analyzes code, debugs issues, reviews files, and chats. Pass file paths to analyze specific files/folders.",
         )
         async def sage_tool(
             prompt: str,
             mode: str = "chat",
+            files: list[str] = None,
             model: str = "auto",
-            folder: str = "",
-            provider: str = "auto",
-            file_handling_mode: str = "embedded"
+            continuation_id: str = None,
+            file_handling_mode: str = "embedded",
+            temperature: float = None,
+            thinking_mode: str = None,
+            use_websearch: bool = True,
         ) -> str:
             """Execute SAGE AI assistant with given prompt and parameters"""
             logger.info(f"SAGE tool called with mode: {mode}, file_handling: {file_handling_mode}")
-            
+
             arguments = {
                 "prompt": prompt,
-                "mode": mode, 
+                "mode": mode,
                 "model": model,
-                "folder": folder,
-                "provider": provider,
-                "file_handling_mode": file_handling_mode
+                "files": files or [],
+                "continuation_id": continuation_id,
+                "file_handling_mode": file_handling_mode,
+                "temperature": temperature,
+                "thinking_mode": thinking_mode,
+                "use_websearch": use_websearch,
             }
-            
+
             result = await self.sage_tool.execute(arguments)
             # FastMCP expects string return, not TextContent array
             if isinstance(result, list) and result:
-                return result[0].text if hasattr(result[0], 'text') else str(result[0])
+                return result[0].text if hasattr(result[0], "text") else str(result[0])
             return str(result)
-        
+
         @self.mcp.tool(
-            name="list_models", 
-            description="List available AI models"
+            name="list_models",
+            description="List all AI models available from configured providers (OpenAI, Anthropic, Google, OpenRouter, Custom)",
         )
         async def list_models_tool() -> str:
             """List all available AI models from all providers"""
             logger.info("List models tool called")
             result = list_available_models()
             return json.dumps(result, indent=2)
-    
+
     def _setup_handlers(self):
         """Register MCP protocol handlers (fallback)"""
-        
+
         @self.server.list_tools()
         async def list_tools() -> list[Tool]:
             """List available tools (just sage)"""
             return [
                 Tool(
                     name="sage",
-                    description="Universal AI assistant for development tasks",
-                    inputSchema=self.sage_tool.get_input_schema()
+                    description="SAGE: Multi-provider AI assistant. Analyzes code, debugs issues, reviews files, and chats. Pass file paths to analyze specific files/folders.",
+                    inputSchema=self.sage_tool.get_input_schema(),
                 ),
                 Tool(
                     name="list_models",
-                    description="List available AI models",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {}
-                    }
-                )
+                    description="List all AI models available from configured providers (OpenAI, Anthropic, Google, OpenRouter, Custom)",
+                    inputSchema={"type": "object", "properties": {}},
+                ),
             ]
-        
+
         @self.server.call_tool()
         async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             """Handle tool calls"""
             logger.info(f"Tool called: {name} with mode: {arguments.get('mode', 'chat')}")
-            
+
             if name == "sage":
                 result = await self.sage_tool.execute(arguments)
                 return result
@@ -131,29 +133,27 @@ class SageServer:
                 content = json.dumps(result, indent=2)
             else:
                 content = json.dumps({"error": f"Unknown tool: {name}"})
-            
+
             return [TextContent(type="text", text=content)]
-    
+
     def run(self):
         """Run the MCP server"""
         logger.info("Starting SAGE MCP Server...")
-        
+
         if FastMCP:
             # Use FastMCP which handles stdio automatically
             self.mcp.run(transport="stdio")
         else:
             # Fallback to manual async handling
             import asyncio
+
             asyncio.run(self._run_legacy())
-    
+
     async def _run_legacy(self):
         """Legacy server runner"""
         async with stdio_server() as (read_stream, write_stream):
-            await self.server.run(
-                read_stream,
-                write_stream,
-                self.server.create_initialization_options()
-            )
+            await self.server.run(read_stream, write_stream, self.server.create_initialization_options())
+
 
 def main():
     """Main entry point"""
@@ -165,7 +165,9 @@ def main():
     except Exception as e:
         logger.error(f"Server error: {e}", exc_info=True)
         import sys
+
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

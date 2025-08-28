@@ -4,9 +4,10 @@ Test mode - Generate comprehensive tests
 
 from modes.base import BaseMode
 
+
 class TestMode(BaseMode):
     """Handle test generation"""
-    
+
     def get_system_prompt(self) -> str:
         return """You are SAGE in test mode - a testing expert and quality assurance specialist.
         
@@ -31,7 +32,7 @@ Include clear test descriptions and assertions."""
     def _get_mode_enhancement(self) -> str:
         """Add test-specific prompting"""
         return "Generate comprehensive tests including unit tests, integration tests, and edge cases. Use appropriate testing frameworks."
-    
+
     def _get_default_temperature(self) -> float:
         """Test mode uses moderate temperature for creative test scenarios"""
         return 0.4

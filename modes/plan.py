@@ -4,9 +4,10 @@ Plan mode - Project planning and task breakdown
 
 from modes.base import BaseMode
 
+
 class PlanMode(BaseMode):
     """Handle project planning and task breakdown"""
-    
+
     def get_system_prompt(self) -> str:
         return """You are SAGE in planning mode - a project management expert.
         
@@ -31,7 +32,7 @@ Be practical and realistic in your planning."""
     def _get_mode_enhancement(self) -> str:
         """Add planning-specific prompting"""
         return "Create a detailed, actionable project plan with phases, tasks, and priorities."
-    
+
     def _get_default_temperature(self) -> float:
         """Planning mode uses moderate temperature for structured creativity"""
         return 0.5

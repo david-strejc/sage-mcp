@@ -4,9 +4,10 @@ Review mode - Code review for bugs, security, and quality
 
 from modes.base import BaseMode
 
+
 class ReviewMode(BaseMode):
     """Handle code review with focus on quality and security"""
-    
+
     def get_system_prompt(self) -> str:
         return """You are SAGE in review mode - an expert code reviewer.
         
@@ -30,7 +31,7 @@ Be thorough but constructive. Explain the reasoning behind each finding."""
     def _get_mode_enhancement(self) -> str:
         """Add review-specific prompting"""
         return "Provide a thorough code review with specific, actionable feedback."
-    
+
     def _get_default_temperature(self) -> float:
         """Review mode uses low temperature for consistent evaluation"""
         return 0.3

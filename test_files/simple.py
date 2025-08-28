@@ -10,5 +10,6 @@ def calculate_factorial(n):
             result *= i
         return result
 
+
 # Bug: Missing edge case handling for large numbers
 print(calculate_factorial(5))
