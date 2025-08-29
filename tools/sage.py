@@ -92,7 +92,7 @@ class SageTool:
                 "files": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Files or directories to analyze (use absolute paths like '/home/user/project/file.py' or '/path/to/folder'). SAGE will read and analyze these files. Directories are automatically expanded to include all relevant files.",
+                    "description": "PROVIDE FILE PATHS ONLY - NOT file contents! Give absolute paths to files/directories you want SAGE to read and analyze (like '/home/user/project/file.py' or '/path/to/folder'). SAGE reads the files FROM DISK using these paths. Do NOT paste file contents - just provide the paths. Directories auto-expand to include relevant files.",
                     "examples": [
                         ["/home/user/project/src/main.py"],
                         ["/workspace/backend", "/workspace/tests"],
@@ -131,8 +131,8 @@ class SageTool:
 
         # Add model field with restrictions applied and hints
         if available_models:
-            # Get model hints from ModelManager
-            model_hints = model_manager.get_tool_description_hints()
+            # Get model hints from ModelManager - pass available models for dynamic generation
+            model_hints = model_manager.get_tool_description_hints(available_models)
 
             if is_auto_mode:
                 # In auto mode, model is required and shows all available options with hints
@@ -277,7 +277,15 @@ Or use "auto" to let SAGE choose the best model for your task."""
         # Check model restrictions
         if request.model and not self._is_model_allowed(request.model):
             available = self._get_available_models()
-            raise ValueError(f"Model '{request.model}' is not allowed. Available models: {', '.join(available)}")
+            # Get helpful hints about available models
+            model_hints = model_manager.get_tool_description_hints(available)
+            
+            error_msg = f"""Model '{request.model}' is not recognized or not available.
+
+{model_hints}
+
+Please use one of the exact model names listed above."""
+            raise ValueError(error_msg)
 
         # Validate file paths for security
         if request.files:
@@ -349,9 +357,18 @@ Or use "auto" to let SAGE choose the best model for your task."""
         provider = get_provider(model_name)
         if not provider:
             available = self._get_available_models()
-            raise ValueError(
-                f"No provider available for model '{model_name}'. Available models: {', '.join(available)}"
-            )
+            # Get helpful hints about available models
+            model_hints = model_manager.get_tool_description_hints(available)
+            
+            error_msg = f"""No provider available for model '{model_name}'.
+
+{model_hints}
+
+Please check:
+1. API keys are set for the provider of this model
+2. The model name is spelled correctly
+3. Use one of the exact model names listed above"""
+            raise ValueError(error_msg)
 
         return model_name, provider
 

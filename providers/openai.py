@@ -71,10 +71,18 @@ class OpenAIProvider(BaseProvider):
             return False
 
         async def test():
-            # Use o3 for validation test
-            await self.client.chat.completions.create(
-                model="o3", messages=[{"role": "user", "content": "test"}], max_tokens=1
-            )
-            return True
+            # Try to list models to validate API key (doesn't require specific model)
+            try:
+                await self.client.models.list()
+                return True
+            except Exception:
+                # If listing fails, try with gpt-5 which should exist in 2025
+                try:
+                    await self.client.chat.completions.create(
+                        model="gpt-5", messages=[{"role": "user", "content": "test"}], max_tokens=1
+                    )
+                    return True
+                except Exception:
+                    return False
 
         return self._run_async_validation_test(test)

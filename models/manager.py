@@ -75,16 +75,25 @@ class ModelManager:
         # IMPORTANT: Show the actual model name that should be used
         return f"{emoji} {model_name}: {hint} ({context_str} context, {speed} speed, {cost} cost)"
 
-    def get_tool_description_hints(self) -> str:
-        """Get formatted hints for tool description"""
-        hints = []
-
+    def get_tool_description_hints(self, available_models: Optional[List[str]] = None) -> str:
+        """Get formatted hints for tool description based on actually available models"""
+        # If no available models list provided, use all configured models
+        if available_models is None:
+            available_models = list(self.models.keys())
+        
+        # Filter to only show hints for actually available models
+        available_set = set(available_models)
+        
         # Group by complexity/use case
         high_complexity = []
         medium_complexity = []
         low_complexity = []
 
-        for model_name, config in self.models.items():
+        for model_name in available_models:
+            if model_name not in self.models:
+                continue  # Skip models not in our config
+                
+            config = self.models[model_name]
             complexity = config.get("complexity", {}).get("optimal", "medium")
             emoji = config.get("emoji", "")
             hint_text = config.get("hint", "")
@@ -121,19 +130,21 @@ class ModelManager:
         if low_complexity:
             description_parts.append("SIMPLE TASKS (chat, quick queries):\n" + "\n".join(low_complexity))
 
-        # Add common name mapping guidance
-        common_mappings = [
-            '\nCOMMON MODEL REQUESTS:',
-            '• "gemini" or "gemini-pro" → use "gemini-2.5-pro"',
-            '• "gemini-flash" → use "gemini-2.5-flash"', 
-            '• "gpt-4" or "openai" → use "gpt-5" (if available)',
-            '• "claude" or "anthropic" → use "claude-opus-4.1" or "claude-sonnet-4"',
-            '• "o1" or "reasoning" → use "o3" (if available)',
-            '',
-            'USAGE: Set model="gemini-2.5-pro" (exact name required)'
-        ]
-        
-        description_parts.extend(common_mappings)
+        # Add dynamic guidance based on what's actually available
+        if available_models:
+            description_parts.append(f'\nAVAILABLE MODELS: {", ".join(sorted(available_models))}')
+            description_parts.append('IMPORTANT: Use EXACT model names from the list above.')
+            
+            # Add warnings for common mistakes based on what's NOT available
+            warnings = []
+            if "o3" in available_models and "o3-mini" not in available_models:
+                warnings.append('• "o3-mini" does NOT exist - use "o3" instead')
+            if "gpt-5" in available_models and "gpt-4o-mini" not in available_models:
+                warnings.append('• "gpt-4o-mini" does NOT exist - use "gpt-5" instead')
+            
+            if warnings:
+                description_parts.append('\nWARNINGS:')
+                description_parts.extend(warnings)
 
         return "\n".join(description_parts)
 

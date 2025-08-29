@@ -36,9 +36,9 @@ def get_model_hints():
     return {model: _manager.get_model_hint(model) for model in _manager.get_all_models()}
 
 
-def get_tool_description_hints():
+def get_tool_description_hints(available_models=None):
     """Get formatted hints for tool description"""
-    return _manager.get_tool_description_hints()
+    return _manager.get_tool_description_hints(available_models)
 
 
 # Export the manager for direct access if needed
