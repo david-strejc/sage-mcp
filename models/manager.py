@@ -50,6 +50,13 @@ class ModelManager:
         """Get provider name for a model"""
         config = self.get_model_config(model_name)
         return config.get("provider") if config else None
+    
+    def get_api_parameters(self, model_name: str) -> Dict[str, Any]:
+        """Get model-specific API parameters"""
+        config = self.get_model_config(model_name)
+        if config and "api_parameters" in config:
+            return config["api_parameters"]
+        return {}  # Return empty dict if no special parameters
 
     def get_model_hint(self, model_name: str) -> str:
         """Get formatted hint for a model"""

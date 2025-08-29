@@ -26,6 +26,12 @@ models:
     description: "Deep reasoning model for complex problems requiring careful step-by-step analysis"
     hint: "Use for: Mathematical proofs, algorithm design, complex debugging, deep analysis"
     selection_priority: 1  # Higher priority for complex tasks
+    # Model-specific API parameters
+    api_parameters:
+      max_completion_tokens: 65536  # o3 uses this instead of max_tokens
+      temperature: 1.0  # o3 has fixed temperature
+      # Don't send system messages - o3 doesn't support them
+      no_system_messages: true
 
   gpt-5:
     provider: openai
@@ -50,6 +56,9 @@ models:
     description: "Advanced model with excellent tool use and code generation capabilities"
     hint: "Use for: Project planning, code generation, refactoring, test creation"
     selection_priority: 2
+    # Model-specific API parameters  
+    api_parameters:
+      max_tokens: 4096  # gpt-5 uses standard max_tokens
 
   # Google Gemini Models
   gemini-2.5-pro:

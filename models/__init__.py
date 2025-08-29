@@ -41,6 +41,11 @@ def get_tool_description_hints(available_models=None):
     return _manager.get_tool_description_hints(available_models)
 
 
+def get_api_parameters(model_name: str):
+    """Get model-specific API parameters"""
+    return _manager.get_api_parameters(model_name)
+
+
 # Export the manager for direct access if needed
 manager = _manager
 
@@ -53,4 +58,5 @@ __all__ = [
     "select_model_for_task",
     "get_model_hints",
     "get_tool_description_hints",
+    "get_api_parameters",
 ]

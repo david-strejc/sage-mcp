@@ -4,10 +4,11 @@ OpenAI AI provider
 
 import os
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 from openai import AsyncOpenAI
 from providers.base import BaseProvider
+from models import manager as model_manager
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +33,17 @@ class OpenAIProvider(BaseProvider):
     async def complete(
         self, model: str, messages: List[Dict[str, str]], temperature: float = 0.5, max_tokens: Optional[int] = None
     ) -> str:
-        """Complete using OpenAI"""
+        """Complete using OpenAI with model-specific parameters"""
         if not self.client:
             raise ValueError("OpenAI API key not provided")
 
         try:
-            # Special handling for o1/o3 models (they don't support system messages)
-            if model.startswith(("o1", "o3")):
-                # Convert system message to user message for o1/o3 models
+            # Get model-specific API parameters from config
+            api_params = model_manager.get_api_parameters(model)
+            
+            # Handle system messages based on config
+            if api_params.get("no_system_messages", False):
+                # Convert system messages to user messages for models that don't support them
                 converted_messages = []
                 for msg in messages:
                     if msg["role"] == "system":
@@ -47,14 +51,34 @@ class OpenAIProvider(BaseProvider):
                     else:
                         converted_messages.append(msg)
                 messages = converted_messages
+            
+            # Build API call parameters
+            call_params = {
+                "model": model,
+                "messages": messages,
+            }
+            
+            # Use configured temperature or override if specified
+            if "temperature" in api_params:
+                call_params["temperature"] = api_params["temperature"]
+            else:
+                call_params["temperature"] = temperature
+            
+            # Handle max tokens based on model config
+            if "max_completion_tokens" in api_params:
+                # Models like o3 use max_completion_tokens
+                call_params["max_completion_tokens"] = api_params["max_completion_tokens"]
+            elif "max_tokens" in api_params:
+                # Standard models use max_tokens
+                call_params["max_tokens"] = api_params["max_tokens"]
+            elif max_tokens:
+                # Use provided max_tokens as fallback
+                call_params["max_tokens"] = max_tokens
+            else:
+                # Default fallback
+                call_params["max_tokens"] = 4096
 
-                # o1/o3 models have fixed temperature
-                temperature = 1.0
-
-            response = await self.client.chat.completions.create(
-                model=model, messages=messages, temperature=temperature, max_tokens=max_tokens or 4096
-            )
-
+            response = await self.client.chat.completions.create(**call_params)
             return response.choices[0].message.content
 
         except Exception as e:
