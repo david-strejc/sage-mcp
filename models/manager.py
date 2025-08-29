@@ -81,26 +81,17 @@ class ModelManager:
         if available_models is None:
             available_models = list(self.models.keys())
         
-        # Filter to only show hints for actually available models
-        available_set = set(available_models)
-        
-        # Group by complexity/use case
-        high_complexity = []
-        medium_complexity = []
-        low_complexity = []
-
-        for model_name in available_models:
+        # Create compact hints for each model
+        model_descriptions = []
+        for model_name in sorted(available_models):
             if model_name not in self.models:
                 continue  # Skip models not in our config
                 
             config = self.models[model_name]
-            complexity = config.get("complexity", {}).get("optimal", "medium")
             emoji = config.get("emoji", "")
             hint_text = config.get("hint", "")
             context = config["capabilities"].get("context_limit", 0)
-            speed = config["capabilities"].get("speed", "unknown")
-            cost = config["capabilities"].get("cost", "unknown")
-
+            
             # Format context for display
             if context >= 1000000:
                 context_str = f"{context // 1000000}M"
@@ -108,45 +99,18 @@ class ModelManager:
                 context_str = f"{context // 1000}K"
             else:
                 context_str = str(context)
-
-            # Format: emoji "model_name" - description (specs)
-            formatted_hint = f'  {emoji} "{model_name}" - {hint_text} ({context_str} tokens, {speed}, {cost})'
-
-            if complexity in ["very_high", "high"]:
-                high_complexity.append(formatted_hint)
-            elif complexity == "medium":
-                medium_complexity.append(formatted_hint)
-            else:
-                low_complexity.append(formatted_hint)
-
-        description_parts = []
-
-        if high_complexity:
-            description_parts.append("COMPLEX TASKS (deep reasoning, large context):\n" + "\n".join(high_complexity))
-
-        if medium_complexity:
-            description_parts.append("STANDARD TASKS (development, debugging):\n" + "\n".join(medium_complexity))
-
-        if low_complexity:
-            description_parts.append("SIMPLE TASKS (chat, quick queries):\n" + "\n".join(low_complexity))
-
-        # Add dynamic guidance based on what's actually available
-        if available_models:
-            description_parts.append(f'\nAVAILABLE MODELS: {", ".join(sorted(available_models))}')
-            description_parts.append('IMPORTANT: Use EXACT model names from the list above.')
             
-            # Add warnings for common mistakes based on what's NOT available
-            warnings = []
-            if "o3" in available_models and "o3-mini" not in available_models:
-                warnings.append('• "o3-mini" does NOT exist - use "o3" instead')
-            if "gpt-5" in available_models and "gpt-4o-mini" not in available_models:
-                warnings.append('• "gpt-4o-mini" does NOT exist - use "gpt-5" instead')
-            
-            if warnings:
-                description_parts.append('\nWARNINGS:')
-                description_parts.extend(warnings)
-
-        return "\n".join(description_parts)
+            # Compact format for better JSON display
+            model_descriptions.append(f"{emoji} {model_name} ({context_str}): {hint_text}")
+        
+        # Create concise description
+        if model_descriptions:
+            description = "Available models:\n" + "\n".join(model_descriptions)
+            description += f"\n\nUse EXACT names: {', '.join(sorted(available_models))}"
+        else:
+            description = "No models available. Check API keys."
+        
+        return description
 
     def select_model_for_task(
         self,

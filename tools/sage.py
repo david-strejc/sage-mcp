@@ -277,14 +277,12 @@ Or use "auto" to let SAGE choose the best model for your task."""
         # Check model restrictions
         if request.model and not self._is_model_allowed(request.model):
             available = self._get_available_models()
-            # Get helpful hints about available models
-            model_hints = model_manager.get_tool_description_hints(available)
-            
-            error_msg = f"""Model '{request.model}' is not recognized or not available.
-
-{model_hints}
-
-Please use one of the exact model names listed above."""
+            # Create concise error message for JSON output
+            error_msg = (
+                f"Model '{request.model}' is not recognized or available. "
+                f"Available models: {', '.join(sorted(available))}. "
+                f"Use exact model names like 'o3', 'gpt-5', 'gemini-2.5-pro', etc."
+            )
             raise ValueError(error_msg)
 
         # Validate file paths for security
@@ -357,17 +355,12 @@ Please use one of the exact model names listed above."""
         provider = get_provider(model_name)
         if not provider:
             available = self._get_available_models()
-            # Get helpful hints about available models
-            model_hints = model_manager.get_tool_description_hints(available)
-            
-            error_msg = f"""No provider available for model '{model_name}'.
-
-{model_hints}
-
-Please check:
-1. API keys are set for the provider of this model
-2. The model name is spelled correctly
-3. Use one of the exact model names listed above"""
+            # Create concise error message for JSON output
+            error_msg = (
+                f"No provider available for model '{model_name}'. "
+                f"Available models: {', '.join(sorted(available))}. "
+                f"Check API keys are set and use exact model names."
+            )
             raise ValueError(error_msg)
 
         return model_name, provider
