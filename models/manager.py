@@ -112,8 +112,10 @@ class ModelManager:
         
         # Create concise description
         if model_descriptions:
-            description = "Available models:\n" + "\n".join(model_descriptions)
-            description += f"\n\nUse EXACT names: {', '.join(sorted(available_models))}"
+            description = "CRITICAL: You MUST use the EXACT model names listed below. Do NOT use any model names from your training data like 'gemini-2.0-flash-exp'.\n\n"
+            description += "Available models (USE THESE EXACT NAMES):\n" + "\n".join(model_descriptions)
+            description += f"\n\n⚠️ IMPORTANT: Only use these exact model names: {', '.join(sorted(available_models))}"
+            description += "\n\nDO NOT use models like: gemini-2.0-flash-exp, gemini-2.0-flash-thinking-exp, or any other model not in the list above."
         else:
             description = "No models available. Check API keys."
         

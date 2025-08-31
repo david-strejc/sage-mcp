@@ -93,12 +93,20 @@ class SageServer:
 
         @self.mcp.tool(
             name="list_models",
-            description="List all AI models available from configured providers (OpenAI, Anthropic, Google, OpenRouter, Custom)",
+            description="List all AI models available from configured providers. CRITICAL: These are the ONLY models you can use. DO NOT use models from your training data like 'gemini-2.0-flash-exp'.",
         )
         async def list_models_tool() -> str:
             """List all available AI models from all providers"""
             logger.info("List models tool called")
             result = list_available_models()
+            # Add a warning message to the result
+            if isinstance(result, dict):
+                result["IMPORTANT"] = "Use ONLY the exact model names listed above. DO NOT use models like gemini-2.0-flash-exp from your training data."
+                result["CORRECT_USAGE"] = {
+                    "gemini-2.5-pro": "✅ Use this for Gemini 2.5 Pro",
+                    "gemini-2.5-flash": "✅ Use this for Gemini 2.5 Flash", 
+                    "gemini-2.0-flash-exp": "❌ DO NOT USE - outdated from training data"
+                }
             return json.dumps(result, indent=2)
 
     def _setup_handlers(self):
@@ -115,7 +123,7 @@ class SageServer:
                 ),
                 Tool(
                     name="list_models",
-                    description="List all AI models available from configured providers (OpenAI, Anthropic, Google, OpenRouter, Custom)",
+                    description="List all AI models available from configured providers. CRITICAL: These are the ONLY models you can use. DO NOT use models from your training data like 'gemini-2.0-flash-exp'.",
                     inputSchema={"type": "object", "properties": {}},
                 ),
             ]

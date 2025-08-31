@@ -140,8 +140,9 @@ class SageTool:
 
 {model_hints}
 
-IMPORTANT: Use exact model names from the list above.
-Available models: {', '.join(available_models)}"""
+CRITICAL: You MUST select from the models listed above. Do NOT use model names from your training data.
+✅ ONLY use these exact model names: {', '.join(sorted(available_models))}
+❌ DO NOT use: gemini-2.0-flash-exp, gemini-2.0-flash-thinking-exp, or any model not listed above"""
 
                 schema["properties"]["model"] = {"type": "string", "enum": available_models, "description": description}
                 schema["required"].append("model")
@@ -151,8 +152,9 @@ Available models: {', '.join(available_models)}"""
 
 {model_hints}
 
-IMPORTANT: Use exact model names from the list above.
-Available models: {', '.join(available_models)}
+CRITICAL: You MUST select from the models listed above. Do NOT use model names from your training data.
+✅ ONLY use these exact model names: {', '.join(sorted(available_models))}
+❌ DO NOT use: gemini-2.0-flash-exp, gemini-2.0-flash-thinking-exp, or any model not listed above
 
 Or use "auto" to let SAGE choose the best model for your task."""
 
@@ -271,6 +273,47 @@ Or use "auto" to let SAGE choose the best model for your task."""
 
     def _validate_request(self, arguments: dict) -> SageRequest:
         """Validate and parse request arguments"""
+        # Pre-process model name to catch common mistakes
+        if "model" in arguments and arguments["model"]:
+            original_model = arguments["model"]
+            # Common mistaken variations that Claude might use
+            model_corrections = {
+                "gemini 2.5 pro": "gemini-2.5-pro",
+                "gemini-2.5 pro": "gemini-2.5-pro",
+                "gemini2.5pro": "gemini-2.5-pro",
+                "gemini 2.5 flash": "gemini-2.5-flash",
+                "gemini-2.5 flash": "gemini-2.5-flash",
+                "gemini2.5flash": "gemini-2.5-flash",
+                "gpt5": "gpt-5",
+                "gpt 5": "gpt-5",
+                "claude opus 4.1": "claude-opus-4.1",
+                "claude-opus-4-1": "claude-opus-4.1",
+                "claude sonnet 4": "claude-sonnet-4",
+                # Block outdated models from Claude's training data
+                "gemini-2.0-flash-exp": None,
+                "gemini-2.0-flash-thinking-exp": None,
+                "gemini-exp-1206": None,
+                "gemini-exp-1121": None,
+            }
+            
+            # Check for corrections
+            lower_model = original_model.lower().strip()
+            if lower_model in model_corrections:
+                corrected = model_corrections[lower_model]
+                if corrected is None:
+                    # This is a blocked model from training data
+                    available = self._get_available_models()
+                    error_msg = (
+                        f"❌ Model '{original_model}' is from outdated training data and not available.\n"
+                        f"\n✅ Available models you MUST use: {', '.join(sorted(available))}\n"
+                        f"\n⚠️ For Gemini 2.5 Pro, use: 'gemini-2.5-pro'\n"
+                        f"⚠️ For Gemini 2.5 Flash, use: 'gemini-2.5-flash'"
+                    )
+                    raise ValueError(error_msg)
+                else:
+                    arguments["model"] = corrected
+                    logger.info(f"Corrected model name from '{original_model}' to '{corrected}'")
+        
         request = SageRequest(**arguments)
         logger.info(f"SAGE {request.mode} mode called")
 
@@ -280,8 +323,10 @@ Or use "auto" to let SAGE choose the best model for your task."""
             # Create concise error message for JSON output
             error_msg = (
                 f"Model '{request.model}' is not recognized or available. "
-                f"Available models: {', '.join(sorted(available))}. "
-                f"Use exact model names like 'o3', 'gpt-5', 'gemini-2.5-pro', etc."
+                f"\n\n✅ Available models you MUST use: {', '.join(sorted(available))}\n"
+                f"\n⚠️ IMPORTANT: Use ONLY the exact model names listed above.\n"
+                f"❌ DO NOT use models from your training data like 'gemini-2.0-flash-exp'.\n"
+                f"\nFor Gemini 2.5 Pro, use: 'gemini-2.5-pro' (with hyphens, not 'gemini 2.5 pro')"
             )
             raise ValueError(error_msg)
 
@@ -357,8 +402,9 @@ Or use "auto" to let SAGE choose the best model for your task."""
             available = self._get_available_models()
             # Create concise error message for JSON output
             error_msg = (
-                f"No provider available for model '{model_name}'. "
-                f"Available models: {', '.join(sorted(available))}. "
+                f"No provider available for model '{model_name}'. \n"
+                f"\n✅ Available models you MUST use: {', '.join(sorted(available))}\n"
+                f"\n⚠️ Use ONLY these exact model names. DO NOT use models from your training data.\n"
                 f"Check API keys are set and use exact model names."
             )
             raise ValueError(error_msg)

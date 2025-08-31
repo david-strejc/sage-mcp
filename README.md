@@ -239,18 +239,43 @@ DEFAULT_MODEL=auto  # Forces explicit model choice
 | **OpenRouter** | 100+ models from all providers | OPENROUTER_API_KEY |
 | **Custom/Ollama** | llama3.2, mistral, codestral | CUSTOM_API_URL |
 
-### Legacy Configuration Table
+### Complete Configuration Reference
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `GEMINI_API_KEY` | Google Gemini API key | `AIzaSy...` |
+| **API Keys** | | |
 | `OPENAI_API_KEY` | OpenAI API key | `sk-...` |
 | `ANTHROPIC_API_KEY` | Anthropic Claude API key | `sk-ant-...` |
-| `DEFAULT_MODEL` | Default model (`auto` for selection) | `gemini-1.5-flash` |
-| `OPENAI_ALLOWED_MODELS` | Comma-separated allowed OpenAI models | `o3-mini,gpt-4o-mini` |
-| `BLOCKED_MODELS` | Comma-separated blocked models | `gpt-4,claude-opus` |
-| `MAX_FILE_SIZE` | Maximum file size in bytes | `10000000` |
+| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Google Gemini API key | `AIzaSy...` |
+| `OPENROUTER_API_KEY` | OpenRouter API key | `sk-or-...` |
+| `XAI_API_KEY` | xAI (Grok) API key | `xai-...` |
+| `CUSTOM_API_URL` | Custom/Ollama API endpoint | `http://localhost:11434` |
+| `CUSTOM_API_KEY` | Custom API key (if required) | `custom-key` |
+| **Model Selection** | | |
+| `DEFAULT_MODEL` | Default model (`auto` for selection) | `o3`, `gpt-5`, `auto` |
+| **Model Restrictions** | | |
+| `OPENAI_ALLOWED_MODELS` | Allowed OpenAI models | `o3,gpt-5` |
+| `GOOGLE_ALLOWED_MODELS` | Allowed Google models | `gemini-2.5-pro,gemini-2.5-flash` |
+| `ANTHROPIC_ALLOWED_MODELS` | Allowed Anthropic models | `claude-3-5-sonnet` |
+| `BLOCKED_MODELS` | Blocked models (any provider) | `gpt-4,o3-mini` |
+| `DISABLED_MODEL_PATTERNS` | Disable by pattern | `anthropic,claude,mini` |
+| **Limits & Performance** | | |
+| `MAX_FILE_SIZE` | Maximum file size in bytes | `5242880` (5MB) |
 | `MCP_PROMPT_SIZE_LIMIT` | MCP transport limit | `50000` |
+| `MAX_CONVERSATION_TURNS` | Max turns per conversation | `20` |
+| `CONVERSATION_TIMEOUT_HOURS` | Conversation timeout | `3` |
+| **Memory & Storage** | | |
+| `REDIS_URL` | Redis connection for memory | `redis://localhost:6379/0` |
+| `REDIS_DB` | Redis database number | `0` |
+| **Temperature Overrides** | | |
+| `TEMPERATURE_CHAT` | Chat mode temperature | `0.7` |
+| `TEMPERATURE_ANALYZE` | Analyze mode temperature | `0.3` |
+| `TEMPERATURE_DEBUG` | Debug mode temperature | `0.2` |
+| `TEMPERATURE_PLAN` | Plan mode temperature | `0.4` |
+| `TEMPERATURE_TEST` | Test mode temperature | `0.3` |
+| `TEMPERATURE_REFACTOR` | Refactor mode temperature | `0.4` |
+| `TEMPERATURE_REVIEW` | Review mode temperature | `0.5` |
+| `TEMPERATURE_THINK` | Think mode temperature | `0.8` |
 
 
 ## 🏗️ Architecture
