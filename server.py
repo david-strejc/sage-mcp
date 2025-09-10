@@ -57,7 +57,7 @@ class SageServer:
 
         @self.mcp.tool(
             name="sage",
-            description="SAGE: Multi-provider AI assistant. Analyzes code, debugs issues, reviews files, and chats. Pass file paths to analyze specific files/folders.",
+            description="SAGE: Multi-provider AI assistant. CRITICAL: Use ONLY these model names: gemini-2.5-pro, gemini-2.5-flash, gpt-5, o3, claude-opus-4.1, claude-sonnet-4. DO NOT use gemini-2.0-flash-exp or models from training data. Thinking modes: minimal/low/medium/high/max control reasoning depth.",
         )
         async def sage_tool(
             prompt: str,
@@ -118,7 +118,7 @@ class SageServer:
             return [
                 Tool(
                     name="sage",
-                    description="SAGE: Multi-provider AI assistant. Analyzes code, debugs issues, reviews files, and chats. Pass file paths to analyze specific files/folders.",
+                    description="SAGE: Multi-provider AI assistant. CRITICAL: Use ONLY these model names: gemini-2.5-pro, gemini-2.5-flash, gpt-5, o3, claude-opus-4.1, claude-sonnet-4. DO NOT use gemini-2.0-flash-exp or models from training data. Thinking modes: minimal/low/medium/high/max control reasoning depth.",
                     inputSchema=self.sage_tool.get_input_schema(),
                 ),
                 Tool(

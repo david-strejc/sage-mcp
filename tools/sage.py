@@ -37,12 +37,12 @@ class SageRequest(BaseModel):
 
     # Model selection and restrictions
     model: Optional[str] = Field(
-        default=None, description="AI model to use. Supports model restrictions via environment variables."
+        default=None, description="AI model: USE ONLY gemini-2.5-pro, gemini-2.5-flash, gpt-5, o3, claude-opus-4.1, claude-sonnet-4. NOT gemini-2.0-flash-exp!"
     )
     temperature: Optional[float] = Field(default=None, description="Response creativity (0-1, tool-specific defaults)")
     thinking_mode: Optional[Literal["minimal", "low", "medium", "high", "max"]] = Field(
         default=None,
-        description="Thinking depth: minimal (0.5% of model max), low (8%), medium (33%), high (67%), max (100% of model max)",
+        description="Thinking depth: minimal=0.5%, low=8%, medium=33%, high=67%, max=100% of model's max thinking tokens",
     )
 
     # Critical features from zen-mcp
@@ -108,7 +108,7 @@ class SageTool:
                 "thinking_mode": {
                     "type": "string",
                     "enum": ["minimal", "low", "medium", "high", "max"],
-                    "description": "Thinking depth: minimal (0.5% of model max), low (8%), medium (33%), high (67%), max (100% of model max)",
+                    "description": "Thinking depth: minimal=0.5%, low=8%, medium=33%, high=67%, max=100% of model's max thinking tokens",
                 },
                 "continuation_id": {
                     "type": "string",
@@ -136,27 +136,13 @@ class SageTool:
 
             if is_auto_mode:
                 # In auto mode, model is required and shows all available options with hints
-                description = f"""REQUIRED: Select the AI model for this task.
-
-{model_hints}
-
-CRITICAL: You MUST select from the models listed above. Do NOT use model names from your training data.
-✅ ONLY use these exact model names: {', '.join(sorted(available_models))}
-❌ DO NOT use: gemini-2.0-flash-exp, gemini-2.0-flash-thinking-exp, or any model not listed above"""
+                description = f"""REQUIRED: Select the AI model for this task. {model_hints} CRITICAL: You MUST select from the models listed above. Do NOT use model names from your training data. ✅ ONLY use these exact model names: {', '.join(sorted(available_models))} ❌ DO NOT use: gemini-2.0-flash-exp, gemini-2.0-flash-thinking-exp, or any model not listed above"""
 
                 schema["properties"]["model"] = {"type": "string", "enum": available_models, "description": description}
                 schema["required"].append("model")
             else:
                 # Normal mode, model is optional with available options and hints
-                description = f"""AI model to use (optional - defaults to auto-selection).
-
-{model_hints}
-
-CRITICAL: You MUST select from the models listed above. Do NOT use model names from your training data.
-✅ ONLY use these exact model names: {', '.join(sorted(available_models))}
-❌ DO NOT use: gemini-2.0-flash-exp, gemini-2.0-flash-thinking-exp, or any model not listed above
-
-Or use "auto" to let SAGE choose the best model for your task."""
+                description = f"""AI model to use (optional - defaults to auto-selection). {model_hints} CRITICAL: You MUST select from the models listed above. Do NOT use model names from your training data. ✅ ONLY use these exact model names: {', '.join(sorted(available_models))} ❌ DO NOT use: gemini-2.0-flash-exp, gemini-2.0-flash-thinking-exp, or any model not listed above. Or use "auto" to let SAGE choose the best model for your task."""
 
                 schema["properties"]["model"] = {
                     "type": "string",

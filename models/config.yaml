@@ -28,7 +28,7 @@ models:
     selection_priority: 1  # Higher priority for complex tasks
     # Model-specific API parameters
     api_parameters:
-      max_completion_tokens: 65536  # o3 uses this instead of max_tokens
+      max_completion_tokens: 32768  # o3 uses this instead of max_tokens
       temperature: 1.0  # o3 has fixed temperature
       # Don't send system messages - o3 doesn't support them
       no_system_messages: true
@@ -58,7 +58,7 @@ models:
     selection_priority: 2
     # Model-specific API parameters  
     api_parameters:
-      max_tokens: 4096  # gpt-5 uses standard max_tokens
+      max_completion_tokens: 32768  # gpt-5 uses max_completion_tokens instead of max_tokens
 
   # Google Gemini Models
   gemini-2.5-pro:
@@ -84,6 +84,8 @@ models:
     description: "Powerful model with massive 2M token context window for comprehensive analysis"
     hint: "Use for: Large codebases, documentation review, multi-file analysis, long conversations"
     selection_priority: 3
+    api_parameters:
+      max_tokens: 32768  # Gemini models use max_tokens
 
   gemini-2.5-flash:
     provider: gemini
@@ -108,6 +110,8 @@ models:
     description: "Fast model with good reasoning and 1M context, excellent price/performance ratio"
     hint: "Use for: General development tasks, quick analysis, standard debugging"
     selection_priority: 4
+    api_parameters:
+      max_tokens: 32768  # Gemini models use max_tokens
 
   gemini-1.5-pro:
     provider: gemini
@@ -130,6 +134,8 @@ models:
     description: "Legacy long-context model, stable and reliable"
     hint: "Use for: Fallback when newer models unavailable, stable long context needs"
     selection_priority: 6
+    api_parameters:
+      max_tokens: 32768  # Gemini models use max_tokens
 
   gemini-1.5-flash:
     provider: gemini
@@ -153,6 +159,8 @@ models:
     description: "Fastest and cheapest model for simple tasks"
     hint: "Use for: Simple questions, quick lookups, basic chat, cost-sensitive tasks"
     selection_priority: 10
+    api_parameters:
+      max_tokens: 32768  # Gemini models use max_tokens
 
   # Anthropic Models (via OpenRouter)
   claude-opus-4.1:
@@ -177,6 +185,8 @@ models:
     description: "Claude's most capable model, excellent at coding (SWE-bench leader)"
     hint: "Use for: Complex coding tasks, deep analysis, careful reasoning"
     selection_priority: 2
+    api_parameters:
+      max_tokens: 32768  # Anthropic models use max_tokens
 
   claude-sonnet-4:
     provider: anthropic
@@ -199,6 +209,8 @@ models:
     description: "Balanced Claude model with good performance"
     hint: "Use for: General development, balanced performance needs"
     selection_priority: 4
+    api_parameters:
+      max_tokens: 32768  # Anthropic models use max_tokens
 
 # Model selection rules
 selection_rules:
