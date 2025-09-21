@@ -59,6 +59,7 @@ models:
     # Model-specific API parameters  
     api_parameters:
       max_completion_tokens: 32768  # gpt-5 uses max_completion_tokens instead of max_tokens
+      temperature: 1.0  # GPT-5 should always run at fixed temperature
 
   # Google Gemini Models
   gemini-2.5-pro:
