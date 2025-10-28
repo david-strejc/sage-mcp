@@ -95,6 +95,7 @@ class Config:
             "openai": os.getenv("OPENAI_API_KEY"),
             "anthropic": os.getenv("ANTHROPIC_API_KEY"),
             "openrouter": os.getenv("OPENROUTER_API_KEY"),
+            "deepseek": os.getenv("DEEPSEEK_API_KEY"),
             "custom_url": os.getenv("CUSTOM_API_URL"),
             "custom_key": os.getenv("CUSTOM_API_KEY"),
             "xai": os.getenv("XAI_API_KEY"),

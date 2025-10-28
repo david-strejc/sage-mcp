@@ -12,6 +12,7 @@ from providers.openai import OpenAIProvider
 from providers.anthropic import AnthropicProvider
 from providers.openrouter import OpenRouterProvider
 from providers.custom import CustomProvider
+from providers.deepseek import DeepSeekProvider
 from models import manager as model_manager
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,16 @@ def initialize_providers():
         except Exception as e:
             logger.warning(f"Failed to initialize OpenRouter: {e}")
 
+    # Initialize DeepSeek
+    if api_keys.get("deepseek"):
+        try:
+            provider = DeepSeekProvider(api_keys["deepseek"])
+            if provider.validate_api_key():
+                PROVIDERS["deepseek"] = provider
+                logger.info("✓ DeepSeek provider initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize DeepSeek: {e}")
+
     # Initialize Custom/Ollama
     if api_keys.get("custom_url"):
         try:
@@ -101,6 +112,8 @@ def get_provider(model: str) -> Optional[BaseProvider]:
         return PROVIDERS.get("openai")
     elif model.startswith("claude"):
         return PROVIDERS.get("anthropic")
+    elif model.startswith("deepseek"):
+        return PROVIDERS.get("deepseek")
     elif "/" in model:  # OpenRouter format: provider/model
         return PROVIDERS.get("openrouter")
     elif model.startswith("llama") or model.startswith("mixtral"):
@@ -141,7 +154,7 @@ def list_available_models() -> dict:
 def get_available_providers() -> list:
     """Get all available providers and their status"""
     # Return all supported providers, not just initialized ones
-    all_providers = ["openai", "gemini", "anthropic", "openrouter", "custom"]
+    all_providers = ["openai", "gemini", "anthropic", "openrouter", "deepseek", "custom"]
 
     # Initialize providers to check actual availability
     if not PROVIDERS:

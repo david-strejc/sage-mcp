@@ -213,6 +213,85 @@ models:
     api_parameters:
       max_tokens: 32768  # Anthropic models use max_tokens
 
+  # DeepSeek Models
+  deepseek-reasoner:
+    provider: deepseek
+    display_name: "DeepSeek Reasoner"
+    emoji: "🧩"
+    capabilities:
+      reasoning: excellent
+      speed: slow
+      context_limit: 64000
+      cost: low
+      strengths:
+        - deep_reasoning
+        - mathematical_analysis
+        - complex_problem_solving
+        - cost_effective_reasoning
+    modes:
+      preferred: [think, debug, analyze]
+      suitable: [review, plan]
+    complexity:
+      min: high
+      optimal: very_high
+    description: "DeepSeek's reasoning model for complex problems with step-by-step analysis"
+    hint: "Use for: Complex reasoning, mathematical problems, deep analysis at lower cost"
+    selection_priority: 2
+    api_parameters:
+      max_tokens: 8192
+
+  deepseek-chat:
+    provider: deepseek
+    display_name: "DeepSeek Chat"
+    emoji: "💬"
+    capabilities:
+      reasoning: very_good
+      speed: fast
+      context_limit: 64000
+      cost: very_low
+      strengths:
+        - general_tasks
+        - code_generation
+        - quick_responses
+        - cost_efficiency
+    modes:
+      preferred: [chat, debug, refactor]
+      suitable: [analyze, review, test, plan]
+    complexity:
+      min: low
+      optimal: high
+    description: "Fast and cost-effective general purpose model with strong coding capabilities"
+    hint: "Use for: General chat, code generation, debugging, refactoring - excellent price/performance"
+    selection_priority: 3
+    api_parameters:
+      max_tokens: 8192
+
+  deepseek-coder:
+    provider: deepseek
+    display_name: "DeepSeek Coder"
+    emoji: "👨‍💻"
+    capabilities:
+      reasoning: very_good
+      speed: fast
+      context_limit: 64000
+      cost: very_low
+      strengths:
+        - code_generation
+        - code_analysis
+        - refactoring
+        - debugging
+    modes:
+      preferred: [refactor, debug, test]
+      suitable: [analyze, review, plan]
+    complexity:
+      min: low
+      optimal: high
+    description: "Specialized coding model optimized for software development tasks"
+    hint: "Use for: Code generation, refactoring, debugging, test creation"
+    selection_priority: 4
+    api_parameters:
+      max_tokens: 8192
+
 # Model selection rules
 selection_rules:
   context_thresholds:
@@ -260,3 +339,9 @@ providers:
     env_var: OPENROUTER_API_KEY
     supports_streaming: true
     supports_tools: false
+
+  deepseek:
+    requires_api_key: true
+    env_var: DEEPSEEK_API_KEY
+    supports_streaming: true
+    supports_tools: true
