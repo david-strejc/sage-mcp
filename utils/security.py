@@ -103,3 +103,48 @@ def check_file_permissions(path: Path) -> bool:
         return os.access(path, os.R_OK)
     except Exception:
         return False
+
+
+def validate_output_path(path_str: str) -> Tuple[bool, str]:
+    """
+    Validate an output file path for writing (file may not exist yet)
+
+    Args:
+        path_str: File path to validate
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    try:
+        path = Path(path_str)
+
+        # Must be absolute path
+        if not path.is_absolute():
+            return False, "Output path must be absolute"
+
+        # Check for path traversal attempts
+        if ".." in str(path):
+            return False, "Path traversal not allowed"
+
+        # Check parent directory exists or can be created
+        # (we'll create it, but the grandparent should exist)
+        parent = path.parent
+        check_parent = parent
+        while not check_parent.exists():
+            check_parent = check_parent.parent
+            if check_parent == Path("/"):
+                break
+
+        if not check_parent.exists():
+            return False, f"Cannot create directory structure for: {path_str}"
+
+        # Block writing to sensitive system directories
+        sensitive_dirs = ["/etc", "/usr", "/bin", "/sbin", "/lib", "/boot", "/root", "/proc", "/sys"]
+        for sensitive in sensitive_dirs:
+            if str(path).startswith(sensitive):
+                return False, f"Cannot write to system directory: {sensitive}"
+
+        return True, ""
+
+    except Exception as e:
+        return False, f"Output path validation error: {str(e)}"

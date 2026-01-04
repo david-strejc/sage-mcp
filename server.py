@@ -57,7 +57,7 @@ class SageServer:
 
         @self.mcp.tool(
             name="sage",
-            description="SAGE: Multi-provider AI assistant. CRITICAL: Use ONLY these model names: gemini-2.5-pro, gemini-2.5-flash, gpt-5, o3, claude-opus-4.1, claude-sonnet-4. DO NOT use gemini-2.0-flash-exp or models from training data. Thinking modes: minimal/low/medium/high/max control reasoning depth.",
+            description="SAGE: Multi-provider AI assistant. CRITICAL: Use ONLY these model names: gpt-5.2, gemini-3-pro-preview, gemini-3-flash-preview, claude-opus-4.5, claude-sonnet-4.5, deepseek-chat, deepseek-reasoner. DO NOT use outdated models. Thinking modes: minimal/low/medium/high/max.",
         )
         async def sage_tool(
             prompt: str,
@@ -69,6 +69,7 @@ class SageServer:
             temperature: float = None,
             thinking_mode: str = None,
             use_websearch: bool = True,
+            output_file: str = None,
         ) -> str:
             """Execute SAGE AI assistant with given prompt and parameters"""
             logger.info(f"SAGE tool called with mode: {mode}, file_handling: {file_handling_mode}")
@@ -83,6 +84,7 @@ class SageServer:
                 "temperature": temperature,
                 "thinking_mode": thinking_mode,
                 "use_websearch": use_websearch,
+                "output_file": output_file,
             }
 
             result = await self.sage_tool.execute(arguments)
@@ -101,11 +103,13 @@ class SageServer:
             result = list_available_models()
             # Add a warning message to the result
             if isinstance(result, dict):
-                result["IMPORTANT"] = "Use ONLY the exact model names listed above. DO NOT use models like gemini-2.0-flash-exp from your training data."
+                result["IMPORTANT"] = (
+                    "Use ONLY the exact model names listed above. DO NOT use models like gemini-2.0-flash-exp from your training data."
+                )
                 result["CORRECT_USAGE"] = {
                     "gemini-2.5-pro": "✅ Use this for Gemini 2.5 Pro",
-                    "gemini-2.5-flash": "✅ Use this for Gemini 2.5 Flash", 
-                    "gemini-2.0-flash-exp": "❌ DO NOT USE - outdated from training data"
+                    "gemini-2.5-flash": "✅ Use this for Gemini 2.5 Flash",
+                    "gemini-2.0-flash-exp": "❌ DO NOT USE - outdated from training data",
                 }
             return json.dumps(result, indent=2)
 
@@ -118,7 +122,7 @@ class SageServer:
             return [
                 Tool(
                     name="sage",
-                    description="SAGE: Multi-provider AI assistant. CRITICAL: Use ONLY these model names: gemini-2.5-pro, gemini-2.5-flash, gpt-5, o3, claude-opus-4.1, claude-sonnet-4. DO NOT use gemini-2.0-flash-exp or models from training data. Thinking modes: minimal/low/medium/high/max control reasoning depth.",
+                    description="SAGE: Multi-provider AI assistant. CRITICAL: Use ONLY these model names: gpt-5.2, gemini-3-pro-preview, gemini-3-flash-preview, claude-opus-4.5, claude-sonnet-4.5, deepseek-chat, deepseek-reasoner. DO NOT use outdated models. Thinking modes: minimal/low/medium/high/max.",
                     inputSchema=self.sage_tool.get_input_schema(),
                 ),
                 Tool(

@@ -32,12 +32,13 @@ class SageRequest(BaseModel):
     prompt: str = Field(..., description="Your question, request, or task description")
     files: Optional[list[str]] = Field(
         default=None,
-        description="Files or directories to analyze. Use absolute paths like '/home/user/project/file.py' or relative paths from current directory. Directories will be expanded automatically.",
+        description="LIST OF FILE PATHS (strings) - NOT file contents! Pass paths like ['/home/user/file.py', '/path/to/dir']. SAGE reads files from disk. NEVER paste actual code/text here.",
     )
 
     # Model selection and restrictions
     model: Optional[str] = Field(
-        default=None, description="AI model: USE ONLY gemini-2.5-pro, gemini-2.5-flash, gpt-5, o3, claude-opus-4.1, claude-sonnet-4. NOT gemini-2.0-flash-exp!"
+        default=None,
+        description="AI model: USE ONLY gpt-5.2, gemini-3-pro-preview, gemini-3-flash-preview, claude-opus-4.5, claude-sonnet-4.5, deepseek-chat. NOT outdated!",
     )
     temperature: Optional[float] = Field(default=None, description="Response creativity (0-1, tool-specific defaults)")
     thinking_mode: Optional[Literal["minimal", "low", "medium", "high", "max"]] = Field(
@@ -56,6 +57,10 @@ class SageRequest(BaseModel):
     )
     use_websearch: Optional[bool] = Field(
         default=True, description="Enable web search for documentation, best practices, and current information"
+    )
+    output_file: Optional[str] = Field(
+        default=None,
+        description="Save output directly to this file path instead of returning content. Returns confirmation with file size.",
     )
 
 
@@ -92,7 +97,13 @@ class SageTool:
                 "files": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "PROVIDE FILE PATHS ONLY - NOT file contents! Give absolute paths to files/directories you want SAGE to read and analyze (like '/home/user/project/file.py' or '/path/to/folder'). SAGE reads the files FROM DISK using these paths. Do NOT paste file contents - just provide the paths. Directories auto-expand to include relevant files.",
+                    "description": """⚠️ CRITICAL: This parameter accepts FILE PATHS as strings - NOT file contents!
+
+✅ CORRECT: files: ["/home/user/project/main.py", "/workspace/src"]
+❌ WRONG: files: ["def hello():\\n    print('hi')"]  <-- This is CODE, not a path!
+❌ WRONG: files: ["Contents of file..."]  <-- This is TEXT, not a path!
+
+SAGE reads files FROM DISK using the paths you provide. Just give the path strings.""",
                     "examples": [
                         ["/home/user/project/src/main.py"],
                         ["/workspace/backend", "/workspace/tests"],
@@ -124,6 +135,10 @@ class SageTool:
                     "type": "boolean",
                     "default": True,
                     "description": "Enable web search for documentation, best practices, and current information.",
+                },
+                "output_file": {
+                    "type": "string",
+                    "description": "Save output directly to this file path instead of returning content. Returns confirmation with file size.",
                 },
             },
             "required": ["prompt"],
@@ -234,6 +249,10 @@ class SageTool:
                 if not request.continuation_id:  # Only for new conversations
                     result = self._format_response(result, thread_id)
 
+            # 9. Handle output_file - write to file instead of returning content
+            if request.output_file:
+                return [TextContent(type="text", text=self._write_output_to_file(request.output_file, result))]
+
             return [TextContent(type="text", text=result)]
 
         except Exception as e:
@@ -262,26 +281,49 @@ class SageTool:
         # Pre-process model name to catch common mistakes
         if "model" in arguments and arguments["model"]:
             original_model = arguments["model"]
-            # Common mistaken variations that Claude might use
+            # Common mistaken variations - December 2025
             model_corrections = {
+                # Gemini 3 Pro corrections
+                "gemini 3 pro": "gemini-3-pro-preview",
+                "gemini-3 pro": "gemini-3-pro-preview",
+                "gemini3pro": "gemini-3-pro-preview",
+                "gemini-3-pro": "gemini-3-pro-preview",
+                # Gemini 3 Flash corrections
+                "gemini 3 flash": "gemini-3-flash-preview",
+                "gemini-3 flash": "gemini-3-flash-preview",
+                "gemini3flash": "gemini-3-flash-preview",
+                "gemini-3-flash": "gemini-3-flash-preview",
+                # Gemini 2.5 corrections
                 "gemini 2.5 pro": "gemini-2.5-pro",
                 "gemini-2.5 pro": "gemini-2.5-pro",
-                "gemini2.5pro": "gemini-2.5-pro",
                 "gemini 2.5 flash": "gemini-2.5-flash",
-                "gemini-2.5 flash": "gemini-2.5-flash",
-                "gemini2.5flash": "gemini-2.5-flash",
-                "gpt5": "gpt-5",
-                "gpt 5": "gpt-5",
-                "claude opus 4.1": "claude-opus-4.1",
-                "claude-opus-4-1": "claude-opus-4.1",
-                "claude sonnet 4": "claude-sonnet-4",
+                # GPT-5.2 corrections
+                "gpt5": "gpt-5.2",
+                "gpt 5": "gpt-5.2",
+                "gpt-5": "gpt-5.2",
+                "gpt5.2": "gpt-5.2",
+                "gpt 5.2": "gpt-5.2",
+                # Claude 4.5 corrections
+                "claude opus 4.5": "claude-opus-4.5",
+                "claude-opus-4-5": "claude-opus-4.5",
+                "claude sonnet 4.5": "claude-sonnet-4.5",
+                "claude-sonnet-4-5": "claude-sonnet-4.5",
+                # Legacy Claude - redirect to 4.5
+                "claude opus 4.1": "claude-opus-4.5",
+                "claude-opus-4.1": "claude-opus-4.5",
+                "claude sonnet 4": "claude-sonnet-4.5",
+                "claude-sonnet-4": "claude-sonnet-4.5",
+                # DeepSeek corrections
+                "deepseek v3": "deepseek-chat",
+                "deepseek-v3": "deepseek-chat",
+                "deepseek v3.2": "deepseek-chat",
                 # Block outdated models from Claude's training data
                 "gemini-2.0-flash-exp": None,
                 "gemini-2.0-flash-thinking-exp": None,
                 "gemini-exp-1206": None,
                 "gemini-exp-1121": None,
             }
-            
+
             # Check for corrections
             lower_model = original_model.lower().strip()
             if lower_model in model_corrections:
@@ -299,7 +341,7 @@ class SageTool:
                 else:
                     arguments["model"] = corrected
                     logger.info(f"Corrected model name from '{original_model}' to '{corrected}'")
-        
+
         request = SageRequest(**arguments)
         logger.info(f"SAGE {request.mode} mode called")
 
@@ -421,3 +463,37 @@ class SageTool:
 
 ---
 💬 **Continue this conversation**: Use `continuation_id: "{thread_id}"` in your next SAGE call to maintain context and avoid re-reading files."""
+
+    def _write_output_to_file(self, file_path: str, content: str) -> str:
+        """Write output to file and return confirmation message"""
+        from pathlib import Path
+        from utils.security import validate_output_path
+
+        # Validate the output path (allows non-existent files, unlike validate_paths)
+        valid, error = validate_output_path(file_path)
+        if not valid:
+            raise ValueError(f"Invalid output file path: {error}")
+
+        path = Path(file_path)
+
+        # Prevent overwriting existing files
+        if path.exists():
+            raise ValueError(f"File already exists: {file_path} - delete it first or use a different path")
+
+        # Create parent directories if needed
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write content
+        path.write_text(content, encoding="utf-8")
+
+        # Calculate human-readable size
+        size_bytes = len(content.encode("utf-8"))
+        if size_bytes < 1024:
+            size_str = f"{size_bytes}B"
+        elif size_bytes < 1024 * 1024:
+            size_str = f"{size_bytes / 1024:.1f}KB"
+        else:
+            size_str = f"{size_bytes / (1024 * 1024):.1f}MB"
+
+        logger.info(f"Output written to {file_path} ({size_str})")
+        return f"Output saved to {file_path} ({size_str})"
