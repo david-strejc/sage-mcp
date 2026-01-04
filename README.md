@@ -1,6 +1,6 @@
 # 🧙 SAGE-MCP: Simple AI Guidance Engine for Claude
 
-[![Version](https://img.shields.io/badge/version-0.1.0--beta-blue)](https://github.com/david-strejc/sage-mcp/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/david-strejc/sage-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Claude](https://img.shields.io/badge/Claude-MCP_Server-purple)](https://claude.ai)
 [![Python](https://img.shields.io/badge/python-3.9%2B-brightgreen)](https://www.python.org)
@@ -37,6 +37,7 @@ SAGE-MCP transforms Claude into a multi-talented development assistant that adap
 - **embedded** - Full file content in context (default)
 - **summary** - Token-efficient summaries for large codebases
 - **reference** - File storage with ID references
+- **output_file** - Save output directly to disk (no context pollution)
 - Automatic directory expansion and smart deduplication
 - Security validation for all file operations
 
@@ -200,21 +201,46 @@ sage(mode="analyze", prompt="Review our database schema",
 
 ```python
 # Multiple modes available
-sage(mode="review", 
+sage(mode="review",
      files=["/src", "/tests"],           # Auto-expands directories
      file_handling_mode="embedded",      # Full content (default)
      prompt="Security review")
 
 sage(mode="analyze",
-     files=["/large/codebase"], 
+     files=["/large/codebase"],
      file_handling_mode="summary",       # Summaries only (saves tokens)
      prompt="Architecture overview")
 
 sage(mode="debug",
      files=["/logs"],
      file_handling_mode="reference",     # Store with IDs
-     prompt="Analyze error patterns") 
+     prompt="Analyze error patterns")
 ```
+
+### Save Output to File
+
+For large outputs that would pollute context, save directly to disk:
+
+```python
+# Save analysis directly to file instead of returning in response
+sage(mode="analyze",
+     files=["/src"],
+     prompt="Full codebase analysis",
+     output_file="/tmp/analysis.md")
+# Returns: "Output saved to /tmp/analysis.md (15.2KB)"
+
+# Great for:
+# - Large code reviews
+# - Documentation generation
+# - Analysis reports
+# - Any output you want to process later
+```
+
+Features:
+- Creates parent directories automatically
+- Prevents accidental overwrites (file must not exist)
+- Blocks writes to system directories
+- Returns human-readable file size confirmation
 
 ### Model Restrictions
 
